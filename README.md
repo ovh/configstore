@@ -3,6 +3,8 @@
 The configstore library aims to facilitate configuration discovery and management.
 It mixes configuration items coming from various (abstracted) data sources, called *providers*.
 
+[![GoDoc](https://godoc.org/github.com/ovh/configstore?status.svg)](https://godoc.org/github.com/ovh/configstore) [![Go Report Card](https://goreportcard.com/badge/github.com/ovh/configstore)](https://goreportcard.com/report/github.com/ovh/configstore)
+
 ## Providers
 
 Providers represent an abstract data source. Their only role is to return a list of *items*.
