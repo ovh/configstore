@@ -56,9 +56,11 @@ An *item* is composed of 3 fields:
 
 ## Item retrieval
 
-When calling *configstore.Items()*, the caller gets an *ItemList*. This object can be used to filter, sort and transform the *items* via convenient helper functions.
+When calling *configstore.GetItemList()*, the caller gets an *ItemList*.
 
-This object is safe to use even when the list is empty.
+This object contains all the configuration items. To manipulate it, you can use a *ItemFilter* object, which provides convenient helper functions to select and reorder the items.
+
+All objects are safe to use even when the item list is empty.
 
 Example of use:
 ```go
