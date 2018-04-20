@@ -10,7 +10,7 @@ Providers represent an abstract data source. Their only role is to return a list
 Some built-in implementations are available (in-memory store, file reader), but the library exposes a way to register a provider *factory*, to extend it and bridge with any other existing system.
 
 Example mixing several providers
-```
+```go
     // custom provider with hardcoded values
     func MyProviderFunc() (configstore.ItemList, error) {
         ret := configstore.ItemList{
@@ -61,7 +61,7 @@ When calling *configstore.Items()*, the caller gets an *ItemList*. This object c
 This object is safe to use even when the list is empty.
 
 Example of use:
-```
+```go
     func main() {
         items, err := configstore.GetItemList()
         if err != nil {
