@@ -31,6 +31,7 @@ func GetItemList() (*ItemList, error) {
 }
 
 // GetItem retrieves the full item list, merging the results from all providers, then returns a single item by key.
+// If 0 or >=2 items are present with that key, it will return an error.
 func GetItem(key string) (Item, error) {
 	items, err := GetItemList()
 	if err != nil {
@@ -39,7 +40,16 @@ func GetItem(key string) (Item, error) {
 	return items.GetItem(key)
 }
 
-// Returns a list of the different keys present in the item list.
+// GetItemValue fetches the full item list, merging the results from all providers, then returns a single item's value by key.
+func GetItemValue(key string) (string, error) {
+	i, err := GetItem(key)
+	if err != nil {
+		return "", err
+	}
+	return i.Value()
+}
+
+// Keys returns a list of the different keys present in the item list.
 func (s *ItemList) Keys() []string {
 	if s == nil {
 		return nil
@@ -53,7 +63,7 @@ func (s *ItemList) Keys() []string {
 	return ret
 }
 
-// Returns a single item, by key.
+// GetItem returns a single item, by key.
 // If 0 or >=2 items are present with that key, it will return an error.
 func (s *ItemList) GetItem(key string) (Item, error) {
 
@@ -71,6 +81,16 @@ func (s *ItemList) GetItem(key string) (Item, error) {
 
 	}
 	return Item{}, fmt.Errorf("configstore: get '%s': ambiguous, %d items share that key", key, len(l.Items))
+}
+
+// GetItemValue returns a single item value, by key.
+// If 0 or >=2 items are present with that key, it will return an error.
+func (s *ItemList) GetItemValue(key string) (string, error) {
+	i, err := s.GetItem(key)
+	if err != nil {
+		return "", err
+	}
+	return i.Value()
 }
 
 // Implements sort.Interface.

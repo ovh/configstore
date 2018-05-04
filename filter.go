@@ -49,6 +49,15 @@ func (s *ItemFilter) GetItem(key string) (Item, error) {
 	return items.GetItem(key)
 }
 
+// GetItemValue fetches the full item list, applies the filter, then returns a single item's value by key.
+func (s *ItemFilter) GetItemValue(key string) (string, error) {
+	i, err := s.GetItem(key)
+	if err != nil {
+		return "", err
+	}
+	return i.Value()
+}
+
 // GetItemList fetches the full item list, applies the filter, and returns the result.
 func (s *ItemFilter) GetItemList() (*ItemList, error) {
 	items, err := GetItemList()

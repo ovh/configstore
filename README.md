@@ -56,7 +56,29 @@ An *item* is composed of 3 fields:
 * **Value**: The content of the item. This can be either manipulated as a plain scalar string, or as a marshaled (JSON or YAML) blob for complex objects.
 * **Priority**: An abstract integer value to use when priorizing between items sharing the same key. The provider is responsible for giving a sensible initial value.
 
-## Item retrieval
+## Item retrieval: Example 101
+
+```
+    $ cat file.txt
+    - key: foo
+      value: bar
+    - key: baz
+      value: bazz
+```
+
+```go
+    func main() {
+        configstore.File("/path/to/file.txt")
+        v, err := configstore.GetItemValue("foo")
+        fmt.Println(v, err)
+    }
+
+```
+
+This very basic example describes how to get a string out of a configuration file (which can be JSON or YAML).
+To do more advanced configuration manipulation, see the next example.
+
+## Item retrieval: advanced filtering
 
 When calling *configstore.GetItemList()*, the caller gets an *ItemList*.
 
