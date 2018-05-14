@@ -27,6 +27,8 @@ var (
 	watchersMut sync.Mutex
 )
 
+// Watch returns a channel which you can range over.
+// You will get unblocked every time a provider notifies of a configuration change.
 func Watch() chan struct{} {
 	// buffer size == 1, notifications will never use a blocking write
 	newCh := make(chan struct{}, 1)
@@ -36,6 +38,8 @@ func Watch() chan struct{} {
 	return newCh
 }
 
+// NotifyWatchers is used by providers to notify of configuration changes.
+// It unblocks all the watchers which are ranging over a watch channel.
 func NotifyWatchers() {
 	watchersMut.Lock()
 	for _, ch := range watchers {

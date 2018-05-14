@@ -11,14 +11,17 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// ErrorProvider registers a configstore provider which always returns an error.
 func ErrorProvider(name string, err error) {
 	RegisterProvider(name, func() (ItemList, error) { return ItemList{}, err })
 }
 
+// File registers a configstore provider which reads from the file given in parameter (static content).
 func File(filename string) {
 	file(filename, false)
 }
 
+// FileRefresh registers a configstore provider which readfs from the file given in parameter (provider watches file stat for auto refresh, watchers get notified).
 func FileRefresh(filename string) {
 	file(filename, true)
 }
@@ -80,11 +83,13 @@ func readFile(filename string) ([]Item, error) {
 	return vals, nil
 }
 
+// InMemoryProvider implements an in-memory configstore provider.
 type InMemoryProvider struct {
 	items []Item
 	mut   sync.Mutex
 }
 
+// Add appends an item to the in-memory list.
 func (inmem *InMemoryProvider) Add(s ...Item) *InMemoryProvider {
 	inmem.mut.Lock()
 	defer inmem.mut.Unlock()
@@ -92,12 +97,15 @@ func (inmem *InMemoryProvider) Add(s ...Item) *InMemoryProvider {
 	return inmem
 }
 
+// Items returns the in-memory item list. This is the function that gets called by configstore.
 func (inmem *InMemoryProvider) Items() (ItemList, error) {
 	inmem.mut.Lock()
 	defer inmem.mut.Unlock()
 	return ItemList{Items: inmem.items}, nil
 }
 
+// InMemory registers an InMemoryProvider with a given arbitrary name and returns it.
+// You can append any number of items to it, see Add().
 func InMemory(name string) *InMemoryProvider {
 	inmem := &InMemoryProvider{}
 	RegisterProvider(name, inmem.Items)
