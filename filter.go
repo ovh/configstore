@@ -3,6 +3,7 @@ package configstore
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 // ItemFilter holds a list of manipulation steps to operate on an item list.
@@ -56,6 +57,51 @@ func (s *ItemFilter) GetItemValue(key string) (string, error) {
 		return "", err
 	}
 	return i.Value()
+}
+
+// GetItemValueBool fetches the full item list, applies the filter, then returns a single item's value by key.
+func (s *ItemFilter) GetItemValueBool(key string) (bool, error) {
+	i, err := s.GetItem(key)
+	if err != nil {
+		return false, err
+	}
+	return i.ValueBool()
+}
+
+// GetItemValueFloat fetches the full item list, applies the filter, then returns a single item's value by key.
+func (s *ItemFilter) GetItemValueFloat(key string) (float64, error) {
+	i, err := s.GetItem(key)
+	if err != nil {
+		return 0, err
+	}
+	return i.ValueFloat()
+}
+
+// GetItemValueInt fetches the full item list, applies the filter, then returns a single item's value by key.
+func (s *ItemFilter) GetItemValueInt(key string) (int64, error) {
+	i, err := s.GetItem(key)
+	if err != nil {
+		return 0, err
+	}
+	return i.ValueInt()
+}
+
+// GetItemValueUint fetches the full item list, applies the filter, then returns a single item's value by key.
+func (s *ItemFilter) GetItemValueUint(key string) (uint64, error) {
+	i, err := s.GetItem(key)
+	if err != nil {
+		return 0, err
+	}
+	return i.ValueUint()
+}
+
+// GetItemValueDuration fetches the full item list, applies the filter, then returns a single item's value by key.
+func (s *ItemFilter) GetItemValueDuration(key string) (time.Duration, error) {
+	i, err := s.GetItem(key)
+	if err != nil {
+		return time.Duration(0), err
+	}
+	return i.ValueDuration()
 }
 
 // GetItemList fetches the full item list, applies the filter, and returns the result.
