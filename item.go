@@ -1,6 +1,9 @@
 package configstore
 
 import (
+	"strconv"
+	"time"
+
 	"github.com/ghodss/yaml"
 )
 
@@ -48,6 +51,51 @@ func (s *Item) Key() string {
 // Value returns the item value, along with any error that was encountered in list processing (unmarshal, transform).
 func (s *Item) Value() (string, error) {
 	return s.value, s.unmarshalErr
+}
+
+// ValueBool returns the item value, along with any error that was encountered in list processing (unmarshal, transform).
+func (s *Item) ValueBool() (bool, error) {
+	if s.unmarshalErr != nil {
+		return false, s.unmarshalErr
+	}
+
+	return strconv.ParseBool(s.value)
+}
+
+// ValueFloat returns the item value, along with any error that was encountered in list processing (unmarshal, transform).
+func (s *Item) ValueFloat() (float64, error) {
+	if s.unmarshalErr != nil {
+		return 0, s.unmarshalErr
+	}
+
+	return strconv.ParseFloat(s.value, 64)
+}
+
+// ValueInt returns the item value, along with any error that was encountered in list processing (unmarshal, transform).
+func (s *Item) ValueInt() (int64, error) {
+	if s.unmarshalErr != nil {
+		return 0, s.unmarshalErr
+	}
+
+	return strconv.ParseInt(s.value, 10, 64)
+}
+
+// ValueUint returns the item value, along with any error that was encountered in list processing (unmarshal, transform).
+func (s *Item) ValueUint() (uint64, error) {
+	if s.unmarshalErr != nil {
+		return 0, s.unmarshalErr
+	}
+
+	return strconv.ParseUint(s.value, 10, 64)
+}
+
+// ValueDuration returns the item value, along with any error that was encountered in list processing (unmarshal, transform).
+func (s *Item) ValueDuration() (time.Duration, error) {
+	if s.unmarshalErr != nil {
+		return time.Duration(0), s.unmarshalErr
+	}
+
+	return time.ParseDuration(s.value)
 }
 
 // Priority returns the item priority.

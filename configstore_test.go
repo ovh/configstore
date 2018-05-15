@@ -2,6 +2,7 @@ package configstore
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -16,6 +17,11 @@ func ProviderTest() (ItemList, error) {
 			NewItem("other", `low`, -3),
 			NewItem("other", `mid`, -2),
 			NewItem("other", `higher`, -1),
+			NewItem("bool", "true", 0),
+			NewItem("int", "-42", 0),
+			NewItem("uint", "42", 0),
+			NewItem("float", "42.42", 0),
+			NewItem("duration", "42s", 0),
 		},
 	}
 	return ret, nil
@@ -52,6 +58,9 @@ func ROLowPrio(s *Item) int64 {
 
 func TestStore(t *testing.T) {
 	RegisterProvider("test", ProviderTest)
+	ProviderLen := 12
+	ProviderElementsKeys := []string{"sql", "other", "bool", "int", "uint", "float", "duration"}
+
 	items, err := GetItemList()
 	if err != nil {
 		t.Error(err)
@@ -60,8 +69,8 @@ func TestStore(t *testing.T) {
 	assert := assert.New(t)
 
 	// Basics
-	assert.Len(items.Items, 7)
-	assert.ElementsMatch(items.Keys(), []string{"sql", "other"})
+	assert.Len(items.Items, ProviderLen)
+	assert.ElementsMatch(items.Keys(), ProviderElementsKeys)
 
 	// Ensure basic order
 	assert.Equal(mustValue(Filter().Slice("other").Apply(items).Items[0]), "higher")
@@ -88,13 +97,28 @@ func TestStore(t *testing.T) {
 	assert.Equal(mustValue(Filter().Slice("other").Squash().Apply(items).Items[0]), "higher")
 
 	// Ensure initial collection did not get affected
-	assert.ElementsMatch(items.Keys(), []string{"sql", "other"})
+	assert.ElementsMatch(items.Keys(), ProviderElementsKeys)
 
 	// Basic sanity test (no error on empty set)
 	assert.Len(Filter().Slice("fiewrhfgoiwerhgiroew").Rekey(RekeyFunc).Reorder(ROLowPrio).Squash().Apply(items).Items, 0)
 
 	// Check filter decription
 	assert.Equal(Filter().Slice("sql").Unmarshal(func() interface{} { return &DBItem{} }).String(), `sql: {"id":"","type":""}`)
+
+	// CheckBool
+	assert.Equal(must(Filter().GetItemValueBool("bool")), true)
+
+	// CheckInt
+	assert.Equal(must(Filter().GetItemValueInt("int")), int64(-42))
+
+	// CheckUint
+	assert.Equal(must(Filter().GetItemValueUint("uint")), uint64(42))
+
+	// CheckFloat
+	assert.Equal(must(Filter().GetItemValueFloat("float")), float64(42.42))
+
+	// CheckDuration
+	assert.Equal(must(Filter().GetItemValueDuration("duration")), 42*time.Second)
 }
 
 func mustValue(i Item) string {
@@ -103,4 +127,11 @@ func mustValue(i Item) string {
 		panic(err)
 	}
 	return v
+}
+
+func must(i interface{}, err error) interface{} {
+	if err != nil {
+		panic(err)
+	}
+	return i
 }

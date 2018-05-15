@@ -3,6 +3,7 @@ package configstore
 import (
 	"fmt"
 	"sort"
+	"time"
 )
 
 // ItemList is a list of items which can be manipulated by an ItemFilter
@@ -49,6 +50,51 @@ func GetItemValue(key string) (string, error) {
 	return i.Value()
 }
 
+// GetItemValueBool fetches the full item list, merging the results from all providers, then returns a single item's value by key.
+func GetItemValueBool(key string) (bool, error) {
+	i, err := GetItem(key)
+	if err != nil {
+		return false, err
+	}
+	return i.ValueBool()
+}
+
+// GetItemValueFloat fetches the full item list, merging the results from all providers, then returns a single item's value by key.
+func GetItemValueFloat(key string) (float64, error) {
+	i, err := GetItem(key)
+	if err != nil {
+		return 0, err
+	}
+	return i.ValueFloat()
+}
+
+// GetItemValueInt fetches the full item list, merging the results from all providers, then returns a single item's value by key.
+func GetItemValueInt(key string) (int64, error) {
+	i, err := GetItem(key)
+	if err != nil {
+		return 0, err
+	}
+	return i.ValueInt()
+}
+
+// GetItemValueUint fetches the full item list, merging the results from all providers, then returns a single item's value by key.
+func GetItemValueUint(key string) (uint64, error) {
+	i, err := GetItem(key)
+	if err != nil {
+		return 0, err
+	}
+	return i.ValueUint()
+}
+
+// GetItemValueDuration fetches the full item list, merging the results from all providers, then returns a single item's value by key.
+func GetItemValueDuration(key string) (time.Duration, error) {
+	i, err := GetItem(key)
+	if err != nil {
+		return time.Duration(0), err
+	}
+	return i.ValueDuration()
+}
+
 // Keys returns a list of the different keys present in the item list.
 func (s *ItemList) Keys() []string {
 	if s == nil {
@@ -91,6 +137,56 @@ func (s *ItemList) GetItemValue(key string) (string, error) {
 		return "", err
 	}
 	return i.Value()
+}
+
+// GetItemValueBool returns a single item value, by key.
+// If 0 or >=2 items are present with that key, it will return an error.
+func (s *ItemList) GetItemValueBool(key string) (bool, error) {
+	i, err := s.GetItem(key)
+	if err != nil {
+		return false, err
+	}
+	return i.ValueBool()
+}
+
+// GetItemValueFloat returns a single item value, by key.
+// If 0 or >=2 items are present with that key, it will return an error.
+func (s *ItemList) GetItemValueFloat(key string) (float64, error) {
+	i, err := s.GetItem(key)
+	if err != nil {
+		return 0, err
+	}
+	return i.ValueFloat()
+}
+
+// GetItemValueInt returns a single item value, by key.
+// If 0 or >=2 items are present with that key, it will return an error.
+func (s *ItemList) GetItemValueInt(key string) (int64, error) {
+	i, err := s.GetItem(key)
+	if err != nil {
+		return 0, err
+	}
+	return i.ValueInt()
+}
+
+// GetItemValueUint returns a single item value, by key.
+// If 0 or >=2 items are present with that key, it will return an error.
+func (s *ItemList) GetItemValueUint(key string) (uint64, error) {
+	i, err := s.GetItem(key)
+	if err != nil {
+		return 0, err
+	}
+	return i.ValueUint()
+}
+
+// GetItemValueDuration returns a single item value, by key.
+// If 0 or >=2 items are present with that key, it will return an error.
+func (s *ItemList) GetItemValueDuration(key string) (time.Duration, error) {
+	i, err := s.GetItem(key)
+	if err != nil {
+		return time.Duration(0), err
+	}
+	return i.ValueDuration()
 }
 
 // Implements sort.Interface.
