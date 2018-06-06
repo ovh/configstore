@@ -72,7 +72,6 @@ An *item* is composed of 3 fields:
         v, err := configstore.GetItemValue("foo")
         fmt.Println(v, err)
     }
-
 ```
 
 This very basic example describes how to get a string out of a configuration file (which can be JSON or YAML).
@@ -168,5 +167,4 @@ Example of use:
         }
         return s.Priority()
     }
-    
 ```
