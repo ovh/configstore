@@ -3,6 +3,8 @@
 The configstore library aims to facilitate configuration discovery and management.
 It mixes configuration items coming from various (abstracted) data sources, called *providers*.
 
+[![GoDoc](https://godoc.org/github.com/ovh/configstore?status.svg)](https://godoc.org/github.com/ovh/configstore) [![Go Report Card](https://goreportcard.com/badge/github.com/ovh/configstore)](https://goreportcard.com/report/github.com/ovh/configstore)
+
 ## Providers
 
 Providers represent an abstract data source. Their only role is to return a list of *items*.
@@ -54,11 +56,34 @@ An *item* is composed of 3 fields:
 * **Value**: The content of the item. This can be either manipulated as a plain scalar string, or as a marshaled (JSON or YAML) blob for complex objects.
 * **Priority**: An abstract integer value to use when priorizing between items sharing the same key. The provider is responsible for giving a sensible initial value.
 
-## Item retrieval
+## Item retrieval: Example 101
 
-When calling *configstore.Items()*, the caller gets an *ItemList*. This object can be used to filter, sort and transform the *items* via convenient helper functions.
+```
+    $ cat file.txt
+    - key: foo
+      value: bar
+    - key: baz
+      value: bazz
+```
 
-This object is safe to use even when the list is empty.
+```go
+    func main() {
+        configstore.File("/path/to/file.txt")
+        v, err := configstore.GetItemValue("foo")
+        fmt.Println(v, err)
+    }
+```
+
+This very basic example describes how to get a string out of a configuration file (which can be JSON or YAML).
+To do more advanced configuration manipulation, see the next example.
+
+## Item retrieval: advanced filtering
+
+When calling *configstore.GetItemList()*, the caller gets an *ItemList*.
+
+This object contains all the configuration items. To manipulate it, you can use a *ItemFilter* object, which provides convenient helper functions to select and reorder the items.
+
+All objects are safe to use even when the item list is empty.
 
 Example of use:
 ```go
@@ -142,5 +167,4 @@ Example of use:
         }
         return s.Priority()
     }
-    
 ```
