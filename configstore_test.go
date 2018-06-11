@@ -1,10 +1,10 @@
 package configstore
 
 import (
-	"reflect"
 	"testing"
 	"time"
 
+	"github.com/juju/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -123,26 +123,26 @@ func TestStore(t *testing.T) {
 
 	// Check item not found
 	_, err = items.GetItem("notfound")
-	assert.Equal(mustType(err, ErrItemNotFound("")), true)
+	assert.Equal(errors.IsNotFound(err), true)
 
 	_, err = items.GetItem("duration")
-	assert.Equal(mustType(err, ErrItemNotFound("")), false)
+	assert.Equal(errors.IsNotFound(err), false)
 
 	// Check uninitialized item list
 	tmp, items := items, nil
 	_, err = items.GetItem("duration")
-	assert.Equal(mustType(err, ErrUninitializedItemList("")), true)
+	assert.Equal(errors.IsNotAssigned(err), true)
 	items = tmp
 
 	_, err = items.GetItem("duration")
-	assert.Equal(mustType(err, ErrUninitializedItemList("")), false)
+	assert.Equal(errors.IsNotAssigned(err), false)
 
 	// Check ambigous item
 	_, err = items.GetItem("sql")
-	assert.Equal(mustType(err, ErrAmbigousItem("")), true)
+	assert.Equal(errors.IsAlreadyExists(err), true)
 
 	_, err = items.GetItem("duration")
-	assert.Equal(mustType(err, ErrAmbigousItem("")), false)
+	assert.Equal(errors.IsAlreadyExists(err), false)
 }
 
 func mustValue(i Item) string {
@@ -158,8 +158,4 @@ func must(i interface{}, err error) interface{} {
 		panic(err)
 	}
 	return i
-}
-
-func mustType(a interface{}, b interface{}) bool {
-	return reflect.TypeOf(a) == reflect.TypeOf(b)
 }

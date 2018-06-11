@@ -1,9 +1,10 @@
 package configstore
 
 import (
-	"fmt"
 	"sort"
 	"time"
+
+	"github.com/juju/errors"
 )
 
 // ItemList is a list of items which can be manipulated by an ItemFilter
@@ -24,7 +25,7 @@ func GetItemList() (*ItemList, error) {
 	for n, p := range providers {
 		l, err := p()
 		if err != nil {
-			return nil, ErrProvider(fmt.Sprintf("configstore: provider '%s': %s", n, err))
+			return nil, errors.NotValidf("configstore: provider '%s': %s", n, err)
 		}
 		ret.Items = append(ret.Items, l.Items...)
 	}
@@ -114,19 +115,19 @@ func (s *ItemList) Keys() []string {
 func (s *ItemList) GetItem(key string) (Item, error) {
 
 	if s == nil {
-		return Item{}, ErrUninitializedItemList(fmt.Sprintf("configstore: get '%s': non-initialized item list", key))
+		return Item{}, errors.NotAssignedf("configstore: get '%s': non-initialized item list", key)
 	}
 
 	l := (&ItemFilter{}).Slice(key).Apply(s)
 
 	switch len(l.Items) {
 	case 0:
-		return Item{}, ErrItemNotFound(fmt.Sprintf("configstore: get '%s': no item found", key))
+		return Item{}, errors.NotFoundf("configstore: get '%s': no item found", key)
 	case 1:
 		return l.Items[0], nil
 
 	}
-	return Item{}, ErrAmbigousItem(fmt.Sprintf("configstore: get '%s': ambiguous, %d items share that key", key, len(l.Items)))
+	return Item{}, errors.AlreadyExistsf("configstore: get '%s': ambiguous, %d items share that key", key, len(l.Items))
 }
 
 // GetItemValue returns a single item value, by key.
