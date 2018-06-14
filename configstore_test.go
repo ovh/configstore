@@ -1,6 +1,7 @@
 package configstore
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -119,6 +120,29 @@ func TestStore(t *testing.T) {
 
 	// CheckDuration
 	assert.Equal(must(Filter().GetItemValueDuration("duration")), 42*time.Second)
+
+	// Check item not found
+	_, err = items.GetItem("notfound")
+	assert.Equal(mustType(err, ErrItemNotFound("")), true)
+
+	_, err = items.GetItem("duration")
+	assert.Equal(mustType(err, ErrItemNotFound("")), false)
+
+	// Check uninitialized item list
+	tmp, items := items, nil
+	_, err = items.GetItem("duration")
+	assert.Equal(mustType(err, ErrUninitializedItemList("")), true)
+	items = tmp
+
+	_, err = items.GetItem("duration")
+	assert.Equal(mustType(err, ErrUninitializedItemList("")), false)
+
+	// Check ambigous item
+	_, err = items.GetItem("sql")
+	assert.Equal(mustType(err, ErrAmbiguousItem("")), true)
+
+	_, err = items.GetItem("duration")
+	assert.Equal(mustType(err, ErrAmbiguousItem("")), false)
 }
 
 func mustValue(i Item) string {
@@ -134,4 +158,8 @@ func must(i interface{}, err error) interface{} {
 		panic(err)
 	}
 	return i
+}
+
+func mustType(a interface{}, b interface{}) bool {
+	return reflect.TypeOf(a) == reflect.TypeOf(b)
 }

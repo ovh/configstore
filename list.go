@@ -24,7 +24,7 @@ func GetItemList() (*ItemList, error) {
 	for n, p := range providers {
 		l, err := p()
 		if err != nil {
-			return nil, fmt.Errorf("configstore: provider '%s': %s", n, err)
+			return nil, ErrProvider(fmt.Sprintf("configstore: provider '%s': %s", n, err))
 		}
 		ret.Items = append(ret.Items, l.Items...)
 	}
@@ -114,19 +114,19 @@ func (s *ItemList) Keys() []string {
 func (s *ItemList) GetItem(key string) (Item, error) {
 
 	if s == nil {
-		return Item{}, fmt.Errorf("configstore: get '%s': non-initialized item list", key)
+		return Item{}, ErrUninitializedItemList(fmt.Sprintf("configstore: get '%s': non-initialized item list", key))
 	}
 
 	l := (&ItemFilter{}).Slice(key).Apply(s)
 
 	switch len(l.Items) {
 	case 0:
-		return Item{}, fmt.Errorf("configstore: get '%s': no item found", key)
+		return Item{}, ErrItemNotFound(fmt.Sprintf("configstore: get '%s': no item found", key))
 	case 1:
 		return l.Items[0], nil
 
 	}
-	return Item{}, fmt.Errorf("configstore: get '%s': ambiguous, %d items share that key", key, len(l.Items))
+	return Item{}, ErrAmbiguousItem(fmt.Sprintf("configstore: get '%s': ambiguous, %d items share that key", key, len(l.Items)))
 }
 
 // GetItemValue returns a single item value, by key.
