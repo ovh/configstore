@@ -139,10 +139,10 @@ func TestStore(t *testing.T) {
 
 	// Check ambigous item
 	_, err = items.GetItem("sql")
-	assert.Equal(mustType(err, ErrAmbigousItem("")), true)
+	assert.Equal(mustType(err, ErrAmbiguousItem("")), true)
 
 	_, err = items.GetItem("duration")
-	assert.Equal(mustType(err, ErrAmbigousItem("")), false)
+	assert.Equal(mustType(err, ErrAmbiguousItem("")), false)
 }
 
 func mustValue(i Item) string {

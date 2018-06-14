@@ -126,7 +126,7 @@ func (s *ItemList) GetItem(key string) (Item, error) {
 		return l.Items[0], nil
 
 	}
-	return Item{}, ErrAmbigousItem(fmt.Sprintf("configstore: get '%s': ambiguous, %d items share that key", key, len(l.Items)))
+	return Item{}, ErrAmbiguousItem(fmt.Sprintf("configstore: get '%s': ambiguous, %d items share that key", key, len(l.Items)))
 }
 
 // GetItemValue returns a single item value, by key.

@@ -2,7 +2,7 @@ package configstore
 
 type ErrItemNotFound string
 type ErrUninitializedItemList string
-type ErrAmbigousItem string
+type ErrAmbiguousItem string
 type ErrProvider string
 
 func (e ErrItemNotFound) Error() string {
@@ -13,7 +13,7 @@ func (e ErrUninitializedItemList) Error() string {
 	return string(e)
 }
 
-func (e ErrAmbigousItem) Error() string {
+func (e ErrAmbiguousItem) Error() string {
 	return string(e)
 }
 
