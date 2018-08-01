@@ -109,6 +109,9 @@ func TestStore(t *testing.T) {
 	// CheckBool
 	assert.Equal(must(Filter().GetItemValueBool("bool")), true)
 
+	// CheckBool with chained calls
+	assert.Equal(must(Filter().MustGetItem("bool").ValueBool()), true)
+
 	// CheckInt
 	assert.Equal(must(Filter().GetItemValueInt("int")), int64(-42))
 
