@@ -49,12 +49,12 @@ func (s *Item) Key() string {
 }
 
 // Value returns the item value, along with any error that was encountered in list processing (unmarshal, transform).
-func (s *Item) Value() (string, error) {
+func (s Item) Value() (string, error) {
 	return s.value, s.unmarshalErr
 }
 
 // ValueBool returns the item value, along with any error that was encountered in list processing (unmarshal, transform).
-func (s *Item) ValueBool() (bool, error) {
+func (s Item) ValueBool() (bool, error) {
 	if s.unmarshalErr != nil {
 		return false, s.unmarshalErr
 	}
@@ -63,7 +63,7 @@ func (s *Item) ValueBool() (bool, error) {
 }
 
 // ValueFloat returns the item value, along with any error that was encountered in list processing (unmarshal, transform).
-func (s *Item) ValueFloat() (float64, error) {
+func (s Item) ValueFloat() (float64, error) {
 	if s.unmarshalErr != nil {
 		return 0, s.unmarshalErr
 	}
@@ -72,7 +72,7 @@ func (s *Item) ValueFloat() (float64, error) {
 }
 
 // ValueInt returns the item value, along with any error that was encountered in list processing (unmarshal, transform).
-func (s *Item) ValueInt() (int64, error) {
+func (s Item) ValueInt() (int64, error) {
 	if s.unmarshalErr != nil {
 		return 0, s.unmarshalErr
 	}
@@ -81,7 +81,7 @@ func (s *Item) ValueInt() (int64, error) {
 }
 
 // ValueUint returns the item value, along with any error that was encountered in list processing (unmarshal, transform).
-func (s *Item) ValueUint() (uint64, error) {
+func (s Item) ValueUint() (uint64, error) {
 	if s.unmarshalErr != nil {
 		return 0, s.unmarshalErr
 	}
@@ -90,7 +90,7 @@ func (s *Item) ValueUint() (uint64, error) {
 }
 
 // ValueDuration returns the item value, along with any error that was encountered in list processing (unmarshal, transform).
-func (s *Item) ValueDuration() (time.Duration, error) {
+func (s Item) ValueDuration() (time.Duration, error) {
 	if s.unmarshalErr != nil {
 		return time.Duration(0), s.unmarshalErr
 	}
@@ -99,7 +99,7 @@ func (s *Item) ValueDuration() (time.Duration, error) {
 }
 
 // Priority returns the item priority.
-func (s *Item) Priority() int64 {
+func (s Item) Priority() int64 {
 	return s.priority
 }
 
@@ -119,6 +119,6 @@ func (s *Item) storeUnmarshal(i interface{}) {
 
 // Unmarshaled returns the unmarshaled object produced by ItemFilter.Unmarshal, along with any error
 // that was encountered in list processing (unmarshal, transform).
-func (s *Item) Unmarshaled() (interface{}, error) {
+func (s Item) Unmarshaled() (interface{}, error) {
 	return s.unmarshaled, s.unmarshalErr
 }
