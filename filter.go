@@ -50,6 +50,44 @@ func (s *ItemFilter) GetItem(key string) (Item, error) {
 	return items.GetItem(key)
 }
 
+// MustGetItem is similar to GetItem, but always returns an Item object.
+// The eventual error is stored inside, and returned when accessing the item's value.
+// Useful for chaining calls.
+func (s *ItemFilter) MustGetItem(key string) Item {
+	i, err := s.GetItem(key)
+	if err != nil {
+		return Item{unmarshalErr: err}
+	}
+	return i
+}
+
+// GetFirstItem fetches the full item list, applies the filter, then returns the first item of the list.
+func (s *ItemFilter) GetFirstItem() (Item, error) {
+	items, err := s.GetItemList()
+	if err != nil {
+		return Item{}, err
+	}
+	if len(items.Items) == 0 {
+		sliceKey := s.initialKeySlice
+		if sliceKey == "" {
+			sliceKey = "[NONE]"
+		}
+		return Item{}, ErrItemNotFound(fmt.Sprintf("configstore: get first item (slice: %s): no item found", sliceKey))
+	}
+	return items.Items[0], nil
+}
+
+// MustGetFirstItem is similar to GetFirstItem, but always returns an Item object.
+// The eventual error is stored inside, and returned when accessing the item's value.
+// Useful for chaining calls.
+func (s *ItemFilter) MustGetFirstItem() Item {
+	i, err := s.GetFirstItem()
+	if err != nil {
+		return Item{unmarshalErr: err}
+	}
+	return i
+}
+
 // GetItemValue fetches the full item list, applies the filter, then returns a single item's value by key.
 func (s *ItemFilter) GetItemValue(key string) (string, error) {
 	i, err := s.GetItem(key)
