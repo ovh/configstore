@@ -23,6 +23,7 @@ func ProviderTest() (ItemList, error) {
 			NewItem("uint", "42", 0),
 			NewItem("float", "42.42", 0),
 			NewItem("duration", "42s", 0),
+			NewItem("bytes", "Y29uZmlnc3RvcmU=", 0),
 		},
 	}
 	return ret, nil
@@ -59,8 +60,8 @@ func ROLowPrio(s *Item) int64 {
 
 func TestStore(t *testing.T) {
 	RegisterProvider("test", ProviderTest)
-	ProviderLen := 12
-	ProviderElementsKeys := []string{"sql", "other", "bool", "int", "uint", "float", "duration"}
+	ProviderLen := 13
+	ProviderElementsKeys := []string{"sql", "other", "bool", "int", "uint", "float", "duration", "bytes"}
 
 	items, err := GetItemList()
 	if err != nil {
@@ -123,6 +124,9 @@ func TestStore(t *testing.T) {
 
 	// CheckDuration
 	assert.Equal(must(Filter().GetItemValueDuration("duration")), 42*time.Second)
+
+	// CheckBytes
+	assert.Equal(must(Filter().MustGetItem("bytes").ValueBytes()), []byte{99,111,110,102,105,103,115,116,111,114,101})
 
 	// Check item not found
 	_, err = items.GetItem("notfound")
