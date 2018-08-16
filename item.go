@@ -1,6 +1,7 @@
 package configstore
 
 import (
+	"encoding/base64"
 	"strconv"
 	"time"
 
@@ -96,6 +97,16 @@ func (s Item) ValueDuration() (time.Duration, error) {
 	}
 
 	return time.ParseDuration(s.value)
+}
+
+// ValueBytes returns the item value, along with any error that was encountered in list processing (unmarshal, transform).
+// Data to be returned should be base64 encoded
+func (s Item) ValueBytes() ([]byte, error) {
+	if s.unmarshalErr != nil {
+		return nil, s.unmarshalErr
+	}
+
+	return base64.StdEncoding.DecodeString(s.value)
 }
 
 // Priority returns the item priority.
