@@ -18,15 +18,25 @@ func ErrorProvider(name string, err error) {
 
 // File registers a configstore provider which reads from the file given in parameter (static content).
 func File(filename string) {
-	file(filename, false)
+	file(filename, false, nil)
 }
 
 // FileRefresh registers a configstore provider which readfs from the file given in parameter (provider watches file stat for auto refresh, watchers get notified).
 func FileRefresh(filename string) {
-	file(filename, true)
+	file(filename, true, nil)
 }
 
-func file(filename string, refresh bool) {
+// FileCustom registers a configstore provider which reads from the file given in parameter, and loads the content using the given unmarshal function
+func FileCustom(filename string, fn func([]byte) ([]Item, error)) {
+	file(filename, false, fn)
+}
+
+// FileCustomRefresh registers a configstore provider which reads from the file given in parameter, and loads the content using the given unmarshal function; and watches file stat for auto refresh
+func FileCustomRefresh(filename string, fn func([]byte) ([]Item, error)) {
+	file(filename, true, fn)
+}
+
+func file(filename string, refresh bool, fn func([]byte) ([]Item, error)) {
 
 	if filename == "" {
 		return
@@ -35,7 +45,7 @@ func file(filename string, refresh bool) {
 	providername := fmt.Sprintf("file:%s", filename)
 
 	last := time.Now()
-	vals, err := readFile(filename)
+	vals, err := readFile(filename, fn)
 	if err != nil {
 		ErrorProvider(providername, err)
 		return
@@ -57,7 +67,7 @@ func file(filename string, refresh bool) {
 				} else {
 					continue
 				}
-				vals, err := readFile(filename)
+				vals, err := readFile(filename, fn)
 				if err != nil {
 					continue
 				}
@@ -70,11 +80,15 @@ func file(filename string, refresh bool) {
 	}
 }
 
-func readFile(filename string) ([]Item, error) {
+func readFile(filename string, fn func([]byte) ([]Item, error)) ([]Item, error) {
 	vals := []Item{}
 	b, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
+	}
+
+	if fn != nil {
+		return fn(b)
 	}
 	err = yaml.Unmarshal(b, &vals)
 	if err != nil {
