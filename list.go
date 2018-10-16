@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 	"time"
+
+	"github.com/ghodss/yaml"
 )
 
 // ItemList is a list of items which can be manipulated by an ItemFilter
@@ -93,6 +95,19 @@ func GetItemValueDuration(key string) (time.Duration, error) {
 		return time.Duration(0), err
 	}
 	return i.ValueDuration()
+}
+
+// GetItemUnmarshaled fetches the full item list, merging the results from all providers, then returns a single item's unmarshaled value.
+func GetItemUnmarshaled(key string, obj interface{}) error {
+	i, err := GetItem(key)
+	if err != nil {
+		return err
+	}
+	v, err := i.Value()
+	if err != nil {
+		return err
+	}
+	return yaml.Unmarshal([]byte(v), obj)
 }
 
 // Keys returns a list of the different keys present in the item list.
