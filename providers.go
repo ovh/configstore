@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 	"unicode"
@@ -82,18 +83,19 @@ func file(filename string, refresh bool, fn func([]byte) ([]Item, error)) {
 	}
 }
 
-// Directory registers a configstore provider which reads from the files contained in the directory given in parameter.
+// FileTree registers a configstore provider which reads from the files contained in the directory given in parameter.
 // A limited hierarchy is supported: files can either be top level (in which case the file name will be used as the item key),
 // or nested in a single sub-directory (in which case the sub-directory name will be used as item key for all the files contained in it).
+// The content of the files should be the plain data, with no envelope.
 // Capitalization can be used to indicate item priority for sub-directories containing multiple items which should be differentiated.
 // Capitalized = higher priority.
-func Directory(dirname string) {
+func FileTree(dirname string) {
 
 	if dirname == "" {
 		return
 	}
 
-	providername := fmt.Sprintf("dir:%s", dirname)
+	providername := fmt.Sprintf("filetree:%s", dirname)
 
 	files, err := ioutil.ReadDir(dirname)
 	if err != nil {
@@ -104,7 +106,7 @@ func Directory(dirname string) {
 	items := []Item{}
 
 	for _, f := range files {
-		filename := fmt.Sprintf("%s/%s", dirname, f.Name())
+		filename := filepath.Join(dirname, f.Name())
 
 		if f.IsDir() {
 			items, err = browseDir(items, filename, f.Name())
@@ -128,6 +130,25 @@ func Directory(dirname string) {
 	}
 }
 
+// FileList registers a configstore provider which reads from the files contained in the directory given in parameter.
+// The content of the files should be JSON/YAML similar to the File provider.
+func FileList(dirname string) {
+
+	if dirname == "" {
+		return
+	}
+
+	files, err := ioutil.ReadDir(dirname)
+	if err != nil {
+		ErrorProvider(fmt.Sprintf("filelist:%s", dirname), err)
+		return
+	}
+
+	for _, file := range files {
+		File(filepath.Join(dirname, file.Name()))
+	}
+}
+
 func browseDir(items []Item, path, basename string) ([]Item, error) {
 
 	files, err := ioutil.ReadDir(path)
@@ -136,7 +157,7 @@ func browseDir(items []Item, path, basename string) ([]Item, error) {
 	}
 
 	for _, f := range files {
-		filename := fmt.Sprintf("%s/%s", path, f.Name())
+		filename := filepath.Join(path, f.Name())
 		if f.IsDir() {
 			return items, fmt.Errorf("subdir %s: encountered nested directory %s, max 1 level of nesting", basename, f.Name())
 		}
