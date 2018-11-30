@@ -6,6 +6,8 @@ import (
 	"os"
 	"sync"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/ghodss/yaml"
 	"github.com/sirupsen/logrus"
@@ -78,6 +80,87 @@ func file(filename string, refresh bool, fn func([]byte) ([]Item, error)) {
 			}
 		}()
 	}
+}
+
+// Directory registers a configstore provider which reads from the files contained in the directory given in parameter.
+// A limited hierarchy is supported: files can either be top level (in which case the file name will be used as the item key),
+// or nested in a single sub-directory (in which case the sub-directory name will be used as item key for all the files contained in it).
+// Capitalization can be used to indicate item priority for sub-directories containing multiple items which should be differentiated.
+// Capitalized = higher priority.
+func Directory(dirname string) {
+
+	if dirname == "" {
+		return
+	}
+
+	providername := fmt.Sprintf("dir:%s", dirname)
+
+	files, err := ioutil.ReadDir(dirname)
+	if err != nil {
+		ErrorProvider(providername, err)
+		return
+	}
+
+	items := []Item{}
+
+	for _, f := range files {
+		filename := fmt.Sprintf("%s/%s", dirname, f.Name())
+
+		if f.IsDir() {
+			items, err = browseDir(items, filename, f.Name())
+			if err != nil {
+				ErrorProvider(providername, err)
+				return
+			}
+		} else {
+			it, err := readItem(filename, f.Name(), f.Name())
+			if err != nil {
+				ErrorProvider(providername, err)
+				return
+			}
+			items = append(items, it)
+		}
+	}
+
+	inmem := InMemory(providername)
+	for _, it := range items {
+		inmem.Add(it)
+	}
+}
+
+func browseDir(items []Item, path, basename string) ([]Item, error) {
+
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return items, err
+	}
+
+	for _, f := range files {
+		filename := fmt.Sprintf("%s/%s", path, f.Name())
+		if f.IsDir() {
+			return items, fmt.Errorf("subdir %s: encountered nested directory %s, max 1 level of nesting", basename, f.Name())
+		}
+		it, err := readItem(filename, f.Name(), basename)
+		if err != nil {
+			return items, err
+		}
+		items = append(items, it)
+	}
+
+	return items, nil
+}
+
+func readItem(path, basename, itemKey string) (Item, error) {
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		return Item{}, err
+	}
+	priority := int64(5)
+	first, _ := utf8.DecodeRuneInString(basename)
+	if unicode.IsUpper(first) {
+		priority = 10
+	}
+	return NewItem(itemKey, string(content), priority), nil
 }
 
 func readFile(filename string, fn func([]byte) ([]Item, error)) ([]Item, error) {

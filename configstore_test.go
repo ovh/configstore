@@ -126,7 +126,7 @@ func TestStore(t *testing.T) {
 	assert.Equal(must(Filter().GetItemValueDuration("duration")), 42*time.Second)
 
 	// CheckBytes
-	assert.Equal(must(Filter().MustGetItem("bytes").ValueBytes()), []byte{99,111,110,102,105,103,115,116,111,114,101})
+	assert.Equal(must(Filter().MustGetItem("bytes").ValueBytes()), []byte{99, 111, 110, 102, 105, 103, 115, 116, 111, 114, 101})
 
 	// Check item not found
 	_, err = items.GetItem("notfound")
