@@ -1,6 +1,7 @@
 package configstore
 
 import (
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -59,7 +60,13 @@ func ROLowPrio(s *Item) int64 {
 }
 
 func TestStore(t *testing.T) {
-	RegisterProvider("test", ProviderTest)
+	os.Setenv(ConfigEnvVar, "test:test123")
+	RegisterProviderFactory("test", func(s string) {
+		if s == "test123" {
+			RegisterProvider("test", ProviderTest)
+		}
+	})
+	InitFromEnvironment()
 	ProviderLen := 13
 	ProviderElementsKeys := []string{"sql", "other", "bool", "int", "uint", "float", "duration", "bytes"}
 

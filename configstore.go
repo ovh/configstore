@@ -1,13 +1,31 @@
 package configstore
 
 import (
+	"errors"
+	"fmt"
+	"os"
+	"strings"
 	"sync"
+)
+
+const (
+	// ConfigEnvVar defines the environment variable used to set up the configuration providers via InitFromEnvironment
+	ConfigEnvVar = "CONFIGURATION_FROM"
 )
 
 var (
 	providers = map[string]Provider{}
 	pMut      sync.Mutex
+
+	providerFactories = map[string]func(string){}
+	pFactMut          sync.Mutex
 )
+
+func init() {
+	RegisterProviderFactory("file", File)
+	RegisterProviderFactory("filelist", FileList)
+	RegisterProviderFactory("filetree", FileTree)
+}
 
 // A Provider retrieves config items and makes them available to the configstore,
 // Their implementations can vary wildly (HTTP API, file, env, hardcoded test, ...)
@@ -19,7 +37,55 @@ type Provider func() (ItemList, error)
 func RegisterProvider(name string, f Provider) {
 	pMut.Lock()
 	defer pMut.Unlock()
+	_, ok := providers[name]
+	if ok {
+		panic(fmt.Sprintf("conflict on configuration provider: %s", name))
+	}
 	providers[name] = f
+}
+
+// RegisterProviderFactory registers a factory function so that InitFromEnvironment can properly
+// instantiate configuration providers via name + argument.
+func RegisterProviderFactory(name string, f func(string)) {
+	pMut.Lock()
+	defer pMut.Unlock()
+	_, ok := providerFactories[name]
+	if ok {
+		panic(fmt.Sprintf("conflict on configuration provider factory: %s", name))
+	}
+	providerFactories[name] = f
+}
+
+// InitFromEnvironment initializes configuration providers via their name and an optional argument.
+// Suitable provider factories should have been registered via RegisterProviderFactory for this to work.
+// Built-in providers (File, FileList, FileTree, ...) are registered by default.
+//
+// Valid example:
+// CONFIGURATION_FROM=file:/etc/myfile.conf,file:/etc/myfile2.conf,filelist:/home/foobar/configs
+func InitFromEnvironment() {
+
+	pFactMut.Lock()
+	defer pFactMut.Unlock()
+
+	cfg := os.Getenv(ConfigEnvVar)
+	cfgList := strings.Split(cfg, ",")
+	for _, c := range cfgList {
+		parts := strings.SplitN(c, ":", 2)
+		name := c
+		arg := ""
+		if len(parts) > 1 {
+			name = parts[0]
+			arg = parts[1]
+		}
+		name = strings.TrimSpace(name)
+		arg = strings.TrimSpace(arg)
+		f := providerFactories[name]
+		if f == nil {
+			ErrorProvider(fmt.Sprintf("%s:%s", name, arg), errors.New("failed to instantiate provider factory"))
+		} else {
+			f(arg)
+		}
+	}
 }
 
 var (
