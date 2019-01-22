@@ -61,9 +61,11 @@ func ROLowPrio(s *Item) int64 {
 
 func TestStore(t *testing.T) {
 	os.Setenv(ConfigEnvVar, "test:test123")
+	AllowProviderOverride()
 	RegisterProviderFactory("test", func(s string) {
 		if s == "test123" {
 			RegisterProvider("test", ProviderTest)
+			RegisterProvider("test", ProviderTest) // register twice to ensure override works
 		}
 	})
 	InitFromEnvironment()

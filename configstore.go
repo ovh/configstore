@@ -14,8 +14,9 @@ const (
 )
 
 var (
-	providers = map[string]Provider{}
-	pMut      sync.Mutex
+	providers             = map[string]Provider{}
+	pMut                  sync.Mutex
+	allowProviderOverride bool
 
 	providerFactories = map[string]func(string){}
 	pFactMut          sync.Mutex
@@ -38,10 +39,20 @@ func RegisterProvider(name string, f Provider) {
 	pMut.Lock()
 	defer pMut.Unlock()
 	_, ok := providers[name]
-	if ok {
+	if ok && !allowProviderOverride {
 		panic(fmt.Sprintf("conflict on configuration provider: %s", name))
 	}
 	providers[name] = f
+}
+
+// AllowProviderOverride allows multiple calls to RegisterProvider() with the same provider name.
+// This is useful for controlled test cases, but is not recommended in the context of a real
+// application.
+func AllowProviderOverride() {
+	fmt.Fprintln(os.Stderr, "configstore: ATTENTION: PROVIDER OVERRIDE ALLOWED/ENABLED")
+	pMut.Lock()
+	defer pMut.Unlock()
+	allowProviderOverride = true
 }
 
 // RegisterProviderFactory registers a factory function so that InitFromEnvironment can properly
