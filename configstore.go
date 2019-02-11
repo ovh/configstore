@@ -79,6 +79,9 @@ func InitFromEnvironment() {
 	defer pFactMut.Unlock()
 
 	cfg := os.Getenv(ConfigEnvVar)
+	if cfg == "" {
+		return
+	}
 	cfgList := strings.Split(cfg, ",")
 	for _, c := range cfgList {
 		parts := strings.SplitN(c, ":", 2)
