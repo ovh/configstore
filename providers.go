@@ -145,7 +145,9 @@ func FileList(dirname string) {
 	}
 
 	for _, file := range files {
-		File(filepath.Join(dirname, file.Name()))
+		if !file.IsDir() {
+			File(filepath.Join(dirname, file.Name()))
+		}
 	}
 }
 
