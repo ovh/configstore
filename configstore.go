@@ -103,8 +103,9 @@ func InitFromEnvironment() {
 }
 
 var (
-	watchers    []chan struct{}
-	watchersMut sync.Mutex
+	watchers      []chan struct{}
+	watchersMut   sync.Mutex
+	watchersNotif = true
 )
 
 // Watch returns a channel which you can range over.
@@ -122,6 +123,10 @@ func Watch() chan struct{} {
 // It unblocks all the watchers which are ranging over a watch channel.
 func NotifyWatchers() {
 	watchersMut.Lock()
+	if !watchersNotif {
+		watchersMut.Unlock()
+		return
+	}
 	for _, ch := range watchers {
 		select {
 		case ch <- struct{}{}:
@@ -129,4 +134,33 @@ func NotifyWatchers() {
 		}
 	}
 	watchersMut.Unlock()
+}
+
+// NotifyMute prevents configstore from notifying watchers on configuration
+// changes, until MotifyUnmute() is called.
+func NotifyMute() {
+	watchersMut.Lock()
+	watchersNotif = false
+	watchersMut.Unlock()
+}
+
+// NotifyUnmute allows configstore to resume notifications to watchers
+// on configuration changes. This will trigger a notification to catch up any change
+// done during the time spent mute.
+func NotifyUnmute() {
+	var alreadyUnmute bool
+	watchersMut.Lock()
+	alreadyUnmute = watchersNotif
+	watchersNotif = true
+	watchersMut.Unlock()
+	if !alreadyUnmute {
+		go NotifyWatchers()
+	}
+}
+
+// NotifyIsMuted reports whether notifications are currently muted.
+func NotifyIsMuted() bool {
+	watchersMut.Lock()
+	defer watchersMut.Unlock()
+	return !watchersNotif
 }
