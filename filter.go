@@ -183,6 +183,8 @@ func copyItemFilter(s *ItemFilter) *ItemFilter {
 // You can optionally pass a list of modifier functions, to be invoked when applying the filter.
 func (s *ItemFilter) Slice(key string, keyF ...func(string) string) *ItemFilter {
 
+	key = transformKey(key)
+
 	s = copyItemFilter(s)
 
 	if s.initialKeySlice == "" {
@@ -207,7 +209,7 @@ func (s *ItemFilter) Slice(key string, keyF ...func(string) string) *ItemFilter 
 func (s *ItemFilter) Rekey(rekeyF func(*Item) string) *ItemFilter {
 	return s.mapFunc(func(sec *Item) Item {
 		return Item{
-			key:          rekeyF(sec),
+			key:          transformKey(rekeyF(sec)),
 			value:        sec.value,
 			priority:     sec.priority,
 			unmarshaled:  sec.unmarshaled,

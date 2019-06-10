@@ -26,6 +26,7 @@ func init() {
 	RegisterProviderFactory("file", File)
 	RegisterProviderFactory("filelist", FileList)
 	RegisterProviderFactory("filetree", FileTree)
+	RegisterProviderFactory("env", Env)
 }
 
 // A Provider retrieves config items and makes them available to the configstore,

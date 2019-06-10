@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 	"unicode"
@@ -230,4 +231,34 @@ func InMemory(name string) *InMemoryProvider {
 	inmem := &InMemoryProvider{}
 	RegisterProvider(name, inmem.Items)
 	return inmem
+}
+
+type envProvider struct {
+	prefix string
+}
+
+func Env(prefix string) {
+
+	if prefix != "" && !strings.HasSuffix(prefix, "_") {
+		prefix += "_"
+	}
+
+	prefixName := strings.ToUpper(prefix)
+	if prefixName == "" {
+		prefixName = "all"
+	}
+	inmem := InMemory(fmt.Sprintf("env:%s", prefixName))
+
+	prefix = transformKey(prefix)
+
+	for _, e := range os.Environ() {
+		ePair := strings.SplitN(e, "=", 2)
+		if len(ePair) <= 1 {
+		    continue
+		}
+		eTr := transformKey(ePair[0])
+		if strings.HasPrefix(eTr, prefix) {
+			inmem.Add(NewItem(strings.TrimPrefix(eTr, prefix), ePair[1], 15))
+		}
+	}
 }
