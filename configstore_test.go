@@ -60,7 +60,8 @@ func ROLowPrio(s *Item) int64 {
 }
 
 func TestStore(t *testing.T) {
-	os.Setenv(ConfigEnvVar, "test:test123")
+	os.Setenv(ConfigEnvVar, "test:test123,env:CONFIGSTORE")
+	os.Setenv("CONFIGSTORE_ENV_VALUE", "from env")
 	AllowProviderOverride()
 	RegisterProviderFactory("test", func(s string) {
 		if s == "test123" {
@@ -69,12 +70,12 @@ func TestStore(t *testing.T) {
 		}
 	})
 	InitFromEnvironment()
-	ProviderLen := 13
-	ProviderElementsKeys := []string{"sql", "other", "bool", "int", "uint", "float", "duration", "bytes"}
+	ProviderLen := 14
+	ProviderElementsKeys := []string{"sql", "other", "bool", "int", "uint", "float", "duration", "bytes", "env-value"}
 
 	items, err := GetItemList()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	assert := assert.New(t)
@@ -82,6 +83,7 @@ func TestStore(t *testing.T) {
 	// Basics
 	assert.Len(items.Items, ProviderLen)
 	assert.ElementsMatch(items.Keys(), ProviderElementsKeys)
+	assert.Equal(mustValue(Filter().Slice("env-value").Squash().Apply(items).Items[0]), "from env")
 
 	// Ensure basic order
 	assert.Equal(mustValue(Filter().Slice("other").Apply(items).Items[0]), "higher")
