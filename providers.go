@@ -252,7 +252,10 @@ func Env(prefix string) {
 	prefix = transformKey(prefix)
 
 	for _, e := range os.Environ() {
-		ePair := strings.Split(e, "=")
+		ePair := strings.SplitN(e, "=", 2)
+		if len(ePair) <= 1 {
+		    continue
+		}
 		eTr := transformKey(ePair[0])
 		if strings.HasPrefix(eTr, prefix) {
 			inmem.Add(NewItem(strings.TrimPrefix(eTr, prefix), ePair[1], 15))
