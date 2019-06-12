@@ -28,7 +28,7 @@ type jsonItem struct {
 
 func transformKey(k string) string {
 	k = strings.ToLower(k)
-	k = strings.ReplaceAll(k, "_", "-")
+	k = strings.Replace(k, "_", "-", -1)
 	return k
 }
 
