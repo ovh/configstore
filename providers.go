@@ -233,10 +233,6 @@ func InMemory(name string) *InMemoryProvider {
 	return inmem
 }
 
-type envProvider struct {
-	prefix string
-}
-
 func Env(prefix string) {
 
 	if prefix != "" && !strings.HasSuffix(prefix, "_") {
@@ -254,7 +250,7 @@ func Env(prefix string) {
 	for _, e := range os.Environ() {
 		ePair := strings.SplitN(e, "=", 2)
 		if len(ePair) <= 1 {
-		    continue
+			continue
 		}
 		eTr := transformKey(ePair[0])
 		if strings.HasPrefix(eTr, prefix) {
