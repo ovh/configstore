@@ -161,9 +161,24 @@ This object contains all the configuration items. To manipulate it, you can use 
 
 All objects are safe to use even when the item list is empty.
 
-Example of use:
+Assuming the following configuration file:
+```yaml
+- key: database
+  value: '{"name": "foo", "ip": "192.168.0.1", "port": 5432, "type": "RO"}'
+- key: database
+  value: '{"name": "foo", "ip": "192.168.0.1", "port": 5433, "type": "RW"}'
+- key: database
+  value: '{"name": "bar", "ip": "192.168.0.1", "port": 5434, "type": "RO"}'
+- key: other
+  value: misc
+```
+
+Our program wants to retrieve database credentials, favoring RW over RO when both are present for the same database:
 ```go
 func main() {
+
+    configstore.File("example.txt")
+
     items, err := configstore.GetItemList()
     if err != nil {
         panic(err)
@@ -173,31 +188,41 @@ func main() {
     // we will apply it on our items list later
     filter := configstore.Filter()
 
-    // get the databases
+    // extract only the "database" items
     filter = filter.Slice("database")
 
-    // now we have a list of database objects, let's assume the payload resembles this:
+    // now we have a list of database objects, with 3 items:
     // {"name": "foo", "ip": "192.168.0.1", "port": 5432, "type": "RO"}
     // {"name": "foo", "ip": "192.168.0.1", "port": 5433, "type": "RW"}
     // {"name": "bar", "ip": "192.168.0.1", "port": 5434, "type": "RO"}
     //
-    // the "database" initial key provides too little information to extract the data relating to a specific DB
-    // we need to drill down into the value
+    // the "database" key provides too little information to further classify items
+    // we need to know the database name and type to further regroup and prioritize them
+    // for that, we need to drill down into the actual item value
 
-    // we need to unmarshal the JSON representation of the whole sublist
+    // we need to unmarshal the JSON representation of every item
     // we pass a factory function that instantiates objects of the correct concrete type
+    // it will be called for each item in the sublist, and each item is then unmarshaled (JSON or YAML) into the returned object
     filter = filter.Unmarshal(func() interface{} { return &Database{} })
 
-    // now we want to actually index and lookup by database name, instead of the generic "database"
-    // we apply a rekey function that does payload inspection
+    // now we want to actually index and lookup by database name, instead of the generic "database" key
+    // we apply a rekey function that does payload inspection and renames each item
+    //
+    // our rekey function was written with knowledge of the objects being manipulated,
+    // and uses the unmarshaled objects, not the raw text
     filter = filter.Rekey(rekeyByName)
 
-    // we have duplicate elements: database "foo" is present twice
+    // we have redundant items: database "foo" is present twice (RO and RW)
     // we want to favor the RW instance if possible
-    // we apply a reordering function that does payload inspection
+    // we apply a reordering function that re-assigns item priorities
+    // after inspecting the unmarshaled objects
     filter = filter.Reorder(prioritizeRW)
 
-    // we only need 1 of each, we squash to only keep the single highest priority of each key
+    // we only need 1 of each distinct database
+    // items relating to the same database now share the same key,
+    // and their priority properly reflects whether they are more or less important (RO or RW)
+    // we apply a squash to keep only the items with the single highest priority value, for each key
+    // = RW items of each database if available, RO otherwise
     filter = filter.Squash()
 
     // now we have only 2 items left:
@@ -207,14 +232,18 @@ func main() {
     // we can finally apply it on our list
     items = filter.Apply(items)
 
-    // the same thing, more concise:
+    // all these transformations can be chained as a one-liner description of the filter steps:
     filter = configstore.Filter().Slice("database").Unmarshal(func() interface{} { return &Database{} }).Rekey(rekeyByName).Reorder(prioritizeRW).Squash()
     items, err = filter.GetItemList() // shortcut: applies the filter to the full list from configstore.GetItemList()
     if err != nil {
         panic(err)
     }
+
     // declaring your filter separately like this lets you define it globally and execute it later
     // that way, you can use its description (String()) to generate usage information.
+    //
+    // in this example, filter.String() would output:
+    // database: {"name": "", "ip": "", "port": "", "type": ""}
 }
 
 type Database struct {
