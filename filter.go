@@ -15,11 +15,12 @@ type ItemFilter struct {
 	funcs           []func(*ItemList) *ItemList
 	initialKeySlice string
 	unmarshalType   interface{}
+	store           *Store
 }
 
 // Filter creates a new empty filter object.
 func Filter() *ItemFilter {
-	return &ItemFilter{}
+	return &ItemFilter{store: DefaultStore}
 }
 
 // String returns a description of the filter.
@@ -144,7 +145,7 @@ func (s *ItemFilter) GetItemValueDuration(key string) (time.Duration, error) {
 
 // GetItemList fetches the full item list, applies the filter, and returns the result.
 func (s *ItemFilter) GetItemList() (*ItemList, error) {
-	items, err := GetItemList()
+	items, err := s.store.GetItemList()
 	if err != nil {
 		return nil, err
 	}
@@ -170,13 +171,23 @@ func (s *ItemFilter) Apply(items *ItemList) *ItemList {
 // chained calls return a copy of the filter.
 // all objects (filter + list + item) are immutable.
 func copyItemFilter(s *ItemFilter) *ItemFilter {
-	ret := &ItemFilter{}
+	ret := Filter()
 	if s != nil {
 		ret.funcs = s.funcs
 		ret.unmarshalType = s.unmarshalType
 		ret.initialKeySlice = s.initialKeySlice
+		ret.store = s.store
 	}
 	return ret
+}
+
+// Store lets you specify which store instance to use for functions GetItemList, GetItem, ...
+func (s *ItemFilter) Store(st *Store) *ItemFilter {
+
+	s = copyItemFilter(s)
+	s.store = st
+
+	return s
 }
 
 // Slice filters the list items, keeping only those matching key.
