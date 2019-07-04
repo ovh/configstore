@@ -62,13 +62,22 @@ func (s *Store) InitFromEnvironment() {
 	}
 }
 
+const (
+	ProviderConflictErrorLabel = "provider-conflict-error"
+)
+
 // RegisterProvider registers a provider
 func (s *Store) RegisterProvider(name string, f Provider) {
+	switch name {
+	case ProviderConflictErrorLabel:
+		return
+	}
 	s.pMut.Lock()
 	defer s.pMut.Unlock()
 	_, ok := s.providers[name]
 	if ok && !s.allowProviderOverride {
-		panic(fmt.Sprintf("configstore: conflict on configuration provider: %s", name))
+		s.providers[ProviderConflictErrorLabel] = newErrorProvider(fmt.Errorf("configstore: conflict on configuration provider: %s", name))
+		return
 	}
 	s.providers[name] = f
 }

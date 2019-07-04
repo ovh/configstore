@@ -20,7 +20,13 @@ import (
  */
 
 func errorProvider(s *Store, name string, err error) {
-	s.RegisterProvider(name, func() (ItemList, error) { return ItemList{}, err })
+	s.RegisterProvider(name, newErrorProvider(err))
+}
+
+func newErrorProvider(err error) Provider {
+	return func() (ItemList, error) {
+		return ItemList{}, err
+	}
 }
 
 func fileProvider(s *Store, filename string) {
