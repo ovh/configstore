@@ -184,6 +184,10 @@ func copyItemFilter(s *ItemFilter) *ItemFilter {
 // Store lets you specify which store instance to use for functions GetItemList, GetItem, ...
 func (s *ItemFilter) Store(st *Store) *ItemFilter {
 
+	if st == nil {
+		return s
+	}
+
 	s = copyItemFilter(s)
 	s.store = st
 
