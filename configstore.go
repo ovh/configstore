@@ -1,10 +1,7 @@
 package configstore
 
 import (
-	"errors"
 	"fmt"
-	"os"
-	"strings"
 	"sync"
 )
 
@@ -14,19 +11,15 @@ const (
 )
 
 var (
-	providers             = map[string]Provider{}
-	pMut                  sync.Mutex
-	allowProviderOverride bool
-
-	providerFactories = map[string]func(string){}
+	providerFactories = map[string]ProviderFactory{}
 	pFactMut          sync.Mutex
 )
 
 func init() {
-	RegisterProviderFactory("file", File)
-	RegisterProviderFactory("filelist", FileList)
-	RegisterProviderFactory("filetree", FileTree)
-	RegisterProviderFactory("env", Env)
+	RegisterProviderFactory("file", fileProvider)
+	RegisterProviderFactory("filelist", fileListProvider)
+	RegisterProviderFactory("filetree", fileTreeProvider)
+	RegisterProviderFactory("env", envProvider)
 }
 
 // A Provider retrieves config items and makes them available to the configstore,
@@ -35,133 +28,18 @@ func init() {
 // It's the responsability of the application using configstore to register suitable providers.
 type Provider func() (ItemList, error)
 
-// RegisterProvider registers a provider
-func RegisterProvider(name string, f Provider) {
-	pMut.Lock()
-	defer pMut.Unlock()
-	_, ok := providers[name]
-	if ok && !allowProviderOverride {
-		panic(fmt.Sprintf("conflict on configuration provider: %s", name))
-	}
-	providers[name] = f
-}
-
-// AllowProviderOverride allows multiple calls to RegisterProvider() with the same provider name.
-// This is useful for controlled test cases, but is not recommended in the context of a real
-// application.
-func AllowProviderOverride() {
-	fmt.Fprintln(os.Stderr, "configstore: ATTENTION: PROVIDER OVERRIDE ALLOWED/ENABLED")
-	pMut.Lock()
-	defer pMut.Unlock()
-	allowProviderOverride = true
-}
+// A ProviderFactory is a function that instantiates a Provider and registers it
+// to a store instance.
+type ProviderFactory func(*Store, string)
 
 // RegisterProviderFactory registers a factory function so that InitFromEnvironment can properly
 // instantiate configuration providers via name + argument.
-func RegisterProviderFactory(name string, f func(string)) {
-	pMut.Lock()
-	defer pMut.Unlock()
+func RegisterProviderFactory(name string, f ProviderFactory) {
+	pFactMut.Lock()
+	defer pFactMut.Unlock()
 	_, ok := providerFactories[name]
 	if ok {
 		panic(fmt.Sprintf("conflict on configuration provider factory: %s", name))
 	}
 	providerFactories[name] = f
-}
-
-// InitFromEnvironment initializes configuration providers via their name and an optional argument.
-// Suitable provider factories should have been registered via RegisterProviderFactory for this to work.
-// Built-in providers (File, FileList, FileTree, ...) are registered by default.
-//
-// Valid example:
-// CONFIGURATION_FROM=file:/etc/myfile.conf,file:/etc/myfile2.conf,filelist:/home/foobar/configs
-func InitFromEnvironment() {
-
-	pFactMut.Lock()
-	defer pFactMut.Unlock()
-
-	cfg := os.Getenv(ConfigEnvVar)
-	if cfg == "" {
-		return
-	}
-	cfgList := strings.Split(cfg, ",")
-	for _, c := range cfgList {
-		parts := strings.SplitN(c, ":", 2)
-		name := c
-		arg := ""
-		if len(parts) > 1 {
-			name = parts[0]
-			arg = parts[1]
-		}
-		name = strings.TrimSpace(name)
-		arg = strings.TrimSpace(arg)
-		f := providerFactories[name]
-		if f == nil {
-			ErrorProvider(fmt.Sprintf("%s:%s", name, arg), errors.New("failed to instantiate provider factory"))
-		} else {
-			f(arg)
-		}
-	}
-}
-
-var (
-	watchers      []chan struct{}
-	watchersMut   sync.Mutex
-	watchersNotif = true
-)
-
-// Watch returns a channel which you can range over.
-// You will get unblocked every time a provider notifies of a configuration change.
-func Watch() chan struct{} {
-	// buffer size == 1, notifications will never use a blocking write
-	newCh := make(chan struct{}, 1)
-	watchersMut.Lock()
-	watchers = append(watchers, newCh)
-	watchersMut.Unlock()
-	return newCh
-}
-
-// NotifyWatchers is used by providers to notify of configuration changes.
-// It unblocks all the watchers which are ranging over a watch channel.
-func NotifyWatchers() {
-	watchersMut.Lock()
-	if !watchersNotif {
-		watchersMut.Unlock()
-		return
-	}
-	for _, ch := range watchers {
-		select {
-		case ch <- struct{}{}:
-		default:
-		}
-	}
-	watchersMut.Unlock()
-}
-
-// NotifyMute prevents configstore from notifying watchers on configuration
-// changes, until MotifyUnmute() is called.
-func NotifyMute() {
-	watchersMut.Lock()
-	watchersNotif = false
-	watchersMut.Unlock()
-}
-
-// NotifyUnmute allows configstore to resume notifications to watchers
-// on configuration changes. This will trigger a notification to catch up any change
-// done during the time spent mute.
-func NotifyUnmute() {
-	var alreadyUnmute bool
-	watchersMut.Lock()
-	alreadyUnmute = watchersNotif
-	watchersNotif = true
-	watchersMut.Unlock()
-	if !alreadyUnmute {
-		go NotifyWatchers()
-	}
-}
-
-// NotifyIsMuted reports whether notifications are currently muted.
-func NotifyIsMuted() bool {
-	watchersMut.Lock()
-	defer watchersMut.Unlock()
-	return !watchersNotif
 }

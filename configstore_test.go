@@ -30,6 +30,15 @@ func ProviderTest() (ItemList, error) {
 	return ret, nil
 }
 
+func ProviderTest2() (ItemList, error) {
+	ret := ItemList{
+		Items: []Item{
+			NewItem("foo", `bar`, 1),
+		},
+	}
+	return ret, nil
+}
+
 type DBItem struct {
 	ID   string `json:"id"`
 	Type string `json:"type"`
@@ -59,14 +68,21 @@ func ROLowPrio(s *Item) int64 {
 	return s.Priority()
 }
 
+func TestStoreInstance(t *testing.T) {
+	s := NewStore()
+	s.RegisterProvider("test", ProviderTest2)
+	assert := assert.New(t)
+	assert.Equal(mustValue(Filter().Slice("foo").Store(s).MustGetFirstItem()), "bar")
+}
+
 func TestStore(t *testing.T) {
 	os.Setenv(ConfigEnvVar, "test:test123,env:CONFIGSTORE")
 	os.Setenv("CONFIGSTORE_ENV_VALUE", "from env")
 	AllowProviderOverride()
-	RegisterProviderFactory("test", func(s string) {
-		if s == "test123" {
-			RegisterProvider("test", ProviderTest)
-			RegisterProvider("test", ProviderTest) // register twice to ensure override works
+	RegisterProviderFactory("test", func(s *Store, str string) {
+		if str == "test123" {
+			s.RegisterProvider("test", ProviderTest)
+			s.RegisterProvider("test", ProviderTest) // register twice to ensure override works
 		}
 	})
 	InitFromEnvironment()
