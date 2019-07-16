@@ -135,8 +135,8 @@ func (s *Store) FileList(dirname string) {
 
 // InMemory registers an InMemoryProvider with a given arbitrary name and returns it.
 // You can append any number of items to it, see Add().
-func (s *Store) InMemory(name string) {
-	inMemoryProvider(s, name)
+func (s *Store) InMemory(name string) *InMemoryProvider {
+	return inMemoryProvider(s, name)
 }
 
 // Env registers a provider reading from the environment.

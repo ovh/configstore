@@ -77,8 +77,8 @@ func FileList(dirname string) {
 
 // InMemory registers an InMemoryProvider with a given arbitrary name and returns it.
 // You can append any number of items to it, see Add().
-func InMemory(name string) {
-	DefaultStore.InMemory(name)
+func InMemory(name string) *InMemoryProvider {
+	return DefaultStore.InMemory(name)
 }
 
 // Env registers a provider reading from the environment.
