@@ -42,6 +42,13 @@ func (s *ItemFilter) String() string {
  ** GETTERS
  */
 
+func (s *ItemFilter) getStore() *Store {
+	if s.store == nil {
+		return DefaultStore
+	}
+	return s.store
+}
+
 // GetItem fetches the full item list, applies the filter, then returns a single item by key.
 func (s *ItemFilter) GetItem(key string) (Item, error) {
 	items, err := s.GetItemList()
@@ -145,7 +152,7 @@ func (s *ItemFilter) GetItemValueDuration(key string) (time.Duration, error) {
 
 // GetItemList fetches the full item list, applies the filter, and returns the result.
 func (s *ItemFilter) GetItemList() (*ItemList, error) {
-	items, err := s.store.GetItemList()
+	items, err := s.getStore().GetItemList()
 	if err != nil {
 		return nil, err
 	}
