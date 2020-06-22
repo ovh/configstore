@@ -1,5 +1,7 @@
 language: go
 go:
+  - tip
+  - master
   - 1.11.x
   - 1.12.x
 
