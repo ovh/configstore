@@ -3,6 +3,7 @@ package configstore
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,14 +11,18 @@ import (
 	"time"
 
 	"github.com/ghodss/yaml"
-	"github.com/sirupsen/logrus"
 )
+
+// Logs functions can be overriden
+var LogErrorFunc = log.Printf
+var LogInfoFunc = log.Printf
 
 /*
 ** DEFAULT PROVIDERS IMPLEMENTATION
  */
 
 func errorProvider(s *Store, name string, err error) {
+	LogErrorFunc("error: %v", err)
 	s.RegisterProvider(name, newErrorProvider(err))
 }
 
@@ -58,7 +63,7 @@ func file(s *Store, filename string, refresh bool, fn func([]byte) ([]Item, erro
 		return
 	}
 	inmem := inMemoryProvider(s, providername)
-	logrus.Infof("Configuration from file: %s", filename)
+	LogInfoFunc("configuration from file: %s", filename)
 	inmem.Add(vals...)
 
 	if refresh {
