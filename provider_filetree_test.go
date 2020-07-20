@@ -14,7 +14,7 @@ func TestFileTreeProvider(t *testing.T) {
 	l, err := s.GetItemList()
 	require.NoError(t, err)
 
-	assert.Equal(t, 9, l.Len())
+	assert.Equal(t, 8, l.Len())
 
 	for _, i := range l.Items {
 		t.Logf("items: %s - %s", i.key, i.value)
@@ -22,17 +22,13 @@ func TestFileTreeProvider(t *testing.T) {
 
 	barItems, has := l.indexed["bar"]
 	require.True(t, has, "missing 'bar' items")
-	require.Len(t, barItems, 3, "there must be 3 'bar' items")
+	require.Len(t, barItems, 2, "there must be 2 'bar' items")
 
 	bar := barItems[0]
 	require.Equal(t, "bar", bar.Key())
-	require.Equal(t, "baz_foo_value", bar.value)
-
-	bar = barItems[1]
-	require.Equal(t, "bar", bar.Key())
 	require.Equal(t, "biz value", bar.value)
 
-	bar = barItems[2]
+	bar = barItems[1]
 	require.Equal(t, "bar", bar.Key())
 	require.Equal(t, "buz value", bar.value)
 
@@ -94,18 +90,39 @@ func ExampleStore_FileTree() {
 		fmt.Println(err)
 	}
 
+	fmt.Println("tests/fixtures/filetreeprovider2 contains:")
 	for _, i := range l.Items {
 		fmt.Printf("%s - %s\n", i.key, i.value)
 	}
+
+	s = NewStore()
+	s.FileTree("tests/fixtures/filetreeprovider")
+	l, err = s.GetItemList()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println("tests/fixtures/filetreeprovider contains:")
+	for _, i := range l.Items {
+		fmt.Printf("%s - %s\n", i.key, i.value)
+	}
+
 	// Output:
-	// database - buz value
-	// database - fiz value
+	// tests/fixtures/filetreeprovider2 contains:
 	// database/dev - buz value
 	// database/dev/buz - buz value
 	// database/dev - fiz value
 	// database/dev/fiz - fiz value
-	// database - prod foo value
 	// database/prod - prod foo value
 	// database/prod/foo - prod foo value
+	// foo - foo value
+	// tests/fixtures/filetreeprovider contains:
+	// bar/barbaz - baz_foo_value
+	// bar/barbaz/foo - baz_foo_value
+	// bar - biz value
+	// bar/biz - biz value
+	// bar - buz value
+	// bar/buz - buz value
+	// baz - baz value
 	// foo - foo value
 }

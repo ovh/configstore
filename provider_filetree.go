@@ -65,12 +65,6 @@ func browseDir(items []Item, path, basename string) ([]Item, error) {
 			if err != nil {
 				return nil, err
 			}
-			for _, subItem := range subItems {
-				i := newItem(keyName, subItem.value)
-				if !contains(items, i) {
-					items = append(items, i)
-				}
-			}
 			items = append(items, subItems...)
 			continue
 		}
@@ -108,13 +102,4 @@ func newItem(name, content string) Item {
 		priority = 10
 	}
 	return Item{key: transformKey(name), value: content, priority: priority}
-}
-
-func contains(items []Item, i Item) bool {
-	for x := range items {
-		if items[x].key == i.key && items[x].value == i.value {
-			return true
-		}
-	}
-	return false
 }
