@@ -74,13 +74,9 @@ func browseDir(items []Item, path, basename string) ([]Item, error) {
 			return items, err
 		}
 		it1.key = keyName
-
 		items = append(items, it1)
 
-		keyName2 := transformKey(filepath.Join(basename, f.Name()))
-		it2 := newItem(keyName2, it1.value)
-
-		it1.key = keyName2
+		it2 := newItem(filepath.Join(basename, f.Name()), it1.value)
 		items = append(items, it2)
 	}
 
@@ -101,5 +97,5 @@ func newItem(name, content string) Item {
 	if unicode.IsUpper(first) {
 		priority = 10
 	}
-	return Item{key: transformKey(name), value: content, priority: priority}
+	return NewItem(name, content, priority)
 }

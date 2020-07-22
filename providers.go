@@ -22,7 +22,9 @@ var LogInfoFunc = log.Printf
  */
 
 func errorProvider(s *Store, name string, err error) {
-	LogErrorFunc("error: %v", err)
+	if LogErrorFunc != nil {
+		LogErrorFunc("error: %v", err)
+	}
 	s.RegisterProvider(name, newErrorProvider(err))
 }
 
@@ -63,7 +65,9 @@ func file(s *Store, filename string, refresh bool, fn func([]byte) ([]Item, erro
 		return
 	}
 	inmem := inMemoryProvider(s, providername)
-	LogInfoFunc("configuration from file: %s", filename)
+	if LogInfoFunc != nil {
+		LogInfoFunc("configuration from file: %s", filename)
+	}
 	inmem.Add(vals...)
 
 	if refresh {
