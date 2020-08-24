@@ -56,8 +56,6 @@ func browseDir(items []Item, path, basename string) ([]Item, error) {
 	}
 
 	for _, f := range files {
-		keyName := transformKey(basename)
-
 		filename := filepath.Join(path, f.Name())
 		if f.IsDir() {
 			var subItems []Item
@@ -69,11 +67,10 @@ func browseDir(items []Item, path, basename string) ([]Item, error) {
 			continue
 		}
 
-		it1, err := readItem(filename, f.Name())
+		it1, err := readItem(filename, basename)
 		if err != nil {
 			return items, err
 		}
-		it1.key = keyName
 		items = append(items, it1)
 
 		it2 := newItem(filepath.Join(basename, f.Name()), it1.value)
