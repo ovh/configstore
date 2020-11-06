@@ -224,7 +224,7 @@ func (s *Store) GetItemList() (*ItemList, error) {
 	for n, p := range s.providers {
 		l, err := p()
 		if err != nil {
-			return nil, ErrProvider(fmt.Sprintf("configstore: provider '%s': %s", n, err))
+			return nil, ErrProvider(fmt.Sprintf("configstore: provider '%s': %v", n, err))
 		}
 		ret.Items = append(ret.Items, l.Items...)
 	}
