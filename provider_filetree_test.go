@@ -126,3 +126,64 @@ func ExampleStore_FileTree() {
 	// baz - baz value
 	// foo - foo value
 }
+
+func TestFileTreeProviderWithSymbolicLinks(t *testing.T) {
+	var s = NewStore()
+	s.FileTree("tests/fixtures/filetreeprovider3")
+
+	l, err := s.GetItemList()
+	require.NoError(t, err)
+
+	for _, i := range l.Items {
+		fmt.Printf("%s - %s\n", i.key, i.value)
+	}
+
+	require.Equal(t, 11, l.Len())
+
+	for _, i := range l.Items {
+		fmt.Printf("%s - %s\n", i.key, i.value)
+	}
+
+	v, err := l.GetItemValue("bar")
+	require.NoError(t, err)
+	require.Equal(t, "bar value", v)
+
+	v, err = l.GetItemValue("foo")
+	require.NoError(t, err)
+	require.Equal(t, "foo value", v)
+
+	v, err = l.GetItemValue("link-to-foo")
+	require.NoError(t, err)
+	require.Equal(t, "foo value", v)
+
+	v, err = l.GetItemValue("link-to-filetreeprovider2")
+	require.NoError(t, err)
+	require.Equal(t, "foo value", v)
+
+	v, err = l.GetItemValue("link-to-filetreeprovider2/foo")
+	require.NoError(t, err)
+	require.Equal(t, "foo value", v)
+
+	v, err = l.GetItemValue("link-to-filetreeprovider2/database/dev/buz")
+	require.NoError(t, err)
+	require.Equal(t, "buz value", v)
+
+	v, err = l.GetItemValue("link-to-filetreeprovider2/database/dev/fiz")
+	require.NoError(t, err)
+	require.Equal(t, "fiz value", v)
+
+	indexItems, has := l.indexed["link-to-filetreeprovider2/database/dev"]
+	require.True(t, has, "item 'link-to-filetreeprovider2/database/dev' is missing")
+	item := indexItems[0]
+	require.Equal(t, "buz value", item.value)
+	item = indexItems[1]
+	require.Equal(t, "fiz value", item.value)
+
+	v, err = l.GetItemValue("link-to-filetreeprovider2/database/prod/foo")
+	require.NoError(t, err)
+	require.Equal(t, "prod foo value", v)
+
+	v, err = l.GetItemValue("link-to-filetreeprovider2/database/prod")
+	require.NoError(t, err)
+	require.Equal(t, "prod foo value", v)
+}
