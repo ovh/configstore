@@ -82,6 +82,13 @@ func (s *Store) RegisterProvider(name string, f Provider) {
 	s.providers[name] = f
 }
 
+// UnregisterProvider unregisters a provider
+func (s *Store) UnregisterProvider(name string) {
+	s.pMut.Lock()
+	defer s.pMut.Unlock()
+	delete(s.providers, name)
+}
+
 // AllowProviderOverride allows multiple calls to RegisterProvider() with the same provider name.
 // This is useful for controlled test cases, but is not recommended in the context of a real
 // application.
