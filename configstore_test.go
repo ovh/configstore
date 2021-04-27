@@ -179,6 +179,25 @@ func TestStore(t *testing.T) {
 	assert.Equal(mustType(err, ErrAmbiguousItem("")), false)
 }
 
+func TestStoreWatch(t *testing.T) {
+	s := NewStore()
+	s.RegisterProvider("test", ProviderTest2)
+	assert := assert.New(t)
+	ch := s.Watch()
+	select {
+	case <-ch:
+		assert.FailNow("already a dangling message in watcher")
+	default:
+	}
+
+	s.RegisterProvider("test3", ProviderTest2)
+	select {
+	case <-ch:
+	default:
+		assert.FailNow("no notifications has been sent")
+	}
+}
+
 func mustValue(i Item) string {
 	v, err := i.Value()
 	if err != nil {
