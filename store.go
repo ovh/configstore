@@ -74,6 +74,7 @@ func (s *Store) RegisterProvider(name string, f Provider) {
 	}
 	s.pMut.Lock()
 	defer s.pMut.Unlock()
+	defer s.NotifyWatchers()
 	_, ok := s.providers[name]
 	if ok && !s.allowProviderOverride {
 		s.providers[ProviderConflictErrorLabel] = newErrorProvider(fmt.Errorf("configstore: conflict on configuration provider: %s", name))
