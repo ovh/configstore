@@ -87,6 +87,7 @@ func (s *Store) UnregisterProvider(name string) {
 	s.pMut.Lock()
 	defer s.pMut.Unlock()
 	delete(s.providers, name)
+	s.NotifyWatchers()
 }
 
 // AllowProviderOverride allows multiple calls to RegisterProvider() with the same provider name.
