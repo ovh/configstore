@@ -73,6 +73,7 @@ func TestStoreInstance(t *testing.T) {
 	s.RegisterProvider("test", ProviderTest2)
 	assert := assert.New(t)
 	assert.Equal(mustValue(Filter().Slice("foo").Store(s).MustGetFirstItem()), "bar")
+	s.UnregisterProvider("test")
 }
 
 func TestStore(t *testing.T) {

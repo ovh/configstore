@@ -27,6 +27,11 @@ func RegisterProvider(name string, f Provider) {
 	DefaultStore.RegisterProvider(name, f)
 }
 
+// UnregisterProvider unregisters a provider
+func UnregisterProvider(name string) {
+	DefaultStore.UnregisterProvider(name)
+}
+
 // AllowProviderOverride allows multiple calls to RegisterProvider() with the same provider name.
 // This is useful for controlled test cases, but is not recommended in the context of a real
 // application.
