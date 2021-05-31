@@ -108,9 +108,21 @@ func fileListProvider(s *Store, dirname string) {
 	}
 
 	for _, file := range files {
-		if !file.IsDir() {
-			fileProvider(s, filepath.Join(dirname, file.Name()))
+		if file.IsDir() {
+			continue
 		}
+		if file.Mode()&os.ModeSymlink != 0 {
+			linkedFile, err := os.Stat(filepath.Join(dirname, file.Name()))
+			if err != nil {
+				errorProvider(s, fmt.Sprintf("filelist:%s", dirname), err)
+				return
+			}
+			if linkedFile.IsDir() {
+				continue
+			}
+		}
+
+		fileProvider(s, filepath.Join(dirname, file.Name()))
 	}
 }
 
