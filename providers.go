@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/ghodss/yaml"
 )
 
@@ -56,9 +56,8 @@ func file(s *Store, filename string, refresh bool, fn func([]byte) ([]Item, erro
 		return
 	}
 
-	providername := fmt.Sprintf("file:%s", filename)
+	providername := buildProviderName("file", refresh, filename)
 
-	last := time.Now()
 	vals, err := readFile(filename, fn)
 	if err != nil {
 		errorProvider(s, providername, err)
@@ -70,40 +69,73 @@ func file(s *Store, filename string, refresh bool, fn func([]byte) ([]Item, erro
 	}
 	inmem.Add(vals...)
 
-	if refresh {
-		go func() {
-			ticker := time.NewTicker(10 * time.Second)
-			for range ticker.C {
-				finfo, err := os.Stat(filename)
-				if err != nil {
+	if !refresh {
+		return
+	}
+
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		errorProvider(s, providername, err)
+		return
+	}
+
+	go func() {
+		defer watcher.Close()
+
+		for {
+			select {
+			case <-s.ctx.Done():
+				return
+
+			case event, ok := <-watcher.Events:
+				if !ok {
 					continue
 				}
-				if finfo.ModTime().After(last) {
-					last = finfo.ModTime()
-				} else {
+
+				if event.Op&fsnotify.Write != 0 {
+					vals, err := readFile(filename, fn)
+					if err != nil {
+						errorProvider(s, providername, err)
+					} else {
+						inmem.mut.Lock()
+						inmem.items = vals
+						inmem.mut.Unlock()
+						s.NotifyWatchers()
+					}
+				}
+
+			case err, ok := <-watcher.Errors:
+				if !ok {
 					continue
 				}
-				vals, err := readFile(filename, fn)
-				if err != nil {
-					continue
-				}
-				inmem.mut.Lock()
-				inmem.items = vals
-				inmem.mut.Unlock()
-				s.NotifyWatchers()
+				errorProvider(s, providername, err)
 			}
-		}()
+		}
+	}()
+
+	if err := watcher.Add(filename); err != nil {
+		errorProvider(s, providername, err)
 	}
 }
 
 func fileListProvider(s *Store, dirname string) {
+	fileList(s, dirname, false)
+}
+
+func fileListRefreshProvider(s *Store, dirname string) {
+	fileList(s, dirname, true)
+}
+
+func fileList(s *Store, dirname string, refresh bool) {
 	if dirname == "" {
 		return
 	}
 
+	providername := buildProviderName("filelist", refresh, dirname)
+
 	files, err := ioutil.ReadDir(dirname)
 	if err != nil {
-		errorProvider(s, fmt.Sprintf("filelist:%s", dirname), err)
+		errorProvider(s, providername, err)
 		return
 	}
 
@@ -114,7 +146,7 @@ func fileListProvider(s *Store, dirname string) {
 		if file.Mode()&os.ModeSymlink != 0 {
 			linkedFile, err := os.Stat(filepath.Join(dirname, file.Name()))
 			if err != nil {
-				errorProvider(s, fmt.Sprintf("filelist:%s", dirname), err)
+				errorProvider(s, providername, err)
 				return
 			}
 			if linkedFile.IsDir() {
@@ -122,7 +154,11 @@ func fileListProvider(s *Store, dirname string) {
 			}
 		}
 
-		fileProvider(s, filepath.Join(dirname, file.Name()))
+		if refresh {
+			fileRefreshProvider(s, filepath.Join(dirname, file.Name()))
+		} else {
+			fileProvider(s, filepath.Join(dirname, file.Name()))
+		}
 	}
 }
 
@@ -194,4 +230,11 @@ func envProvider(s *Store, prefix string) {
 			inmem.Add(NewItem(strings.TrimPrefix(eTr, prefix), ePair[1], 15))
 		}
 	}
+}
+
+func buildProviderName(name string, refresh bool, parameter string) string {
+	if refresh {
+		return fmt.Sprintf("%s+refresh:%s", name, parameter)
+	}
+	return fmt.Sprintf("%s:%s", name, parameter)
 }
