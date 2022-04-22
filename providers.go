@@ -21,10 +21,14 @@ var LogInfoFunc = log.Printf
 ** DEFAULT PROVIDERS IMPLEMENTATION
  */
 
-func errorProvider(s *Store, name string, err error) {
+func logError(err error) {
 	if LogErrorFunc != nil {
 		LogErrorFunc("error: %v", err)
 	}
+}
+
+func errorProvider(s *Store, name string, err error) {
+	logError(err)
 	s.RegisterProvider(name, newErrorProvider(err))
 }
 

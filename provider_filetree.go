@@ -24,16 +24,17 @@ func fileTree(s *Store, dirname string, refresh bool) {
 	}
 
 	providername := buildProviderName("filetree", refresh, dirname)
-	inmem := inMemoryProvider(s, providername)
 
 	items, err := loadItems(dirname)
 	if err != nil {
 		errorProvider(s, providername, err)
-	} else {
-		inmem.mut.Lock()
-		inmem.items = items
-		inmem.mut.Unlock()
+		return
 	}
+
+	inmem := inMemoryProvider(s, providername)
+	inmem.mut.Lock()
+	inmem.items = items
+	inmem.mut.Unlock()
 
 	if !refresh {
 		return
@@ -71,7 +72,7 @@ func fileTree(s *Store, dirname string, refresh bool) {
 				// Add new path if it's a directory
 				if event.Op&fsnotify.Create != 0 {
 					if err := watchDirectory(watcher, event.Name); err != nil {
-						errorProvider(s, providername, err)
+						logError(err)
 					}
 				}
 
@@ -83,7 +84,7 @@ func fileTree(s *Store, dirname string, refresh bool) {
 
 				items, err := loadItems(dirname)
 				if err != nil {
-					errorProvider(s, providername, err)
+					logError(err)
 				} else {
 					inmem.mut.Lock()
 					inmem.items = items
@@ -95,7 +96,7 @@ func fileTree(s *Store, dirname string, refresh bool) {
 				if !ok {
 					continue
 				}
-				errorProvider(s, providername, err)
+				logError(err)
 			}
 		}
 	}()
