@@ -99,7 +99,7 @@ func file(s *Store, filename string, refresh bool, fn func([]byte) ([]Item, erro
 				if event.Op&fsnotify.Write != 0 {
 					vals, err := readFile(filename, fn)
 					if err != nil {
-						errorProvider(s, providername, err)
+						logError(err)
 					} else {
 						inmem.mut.Lock()
 						inmem.items = vals
@@ -112,7 +112,7 @@ func file(s *Store, filename string, refresh bool, fn func([]byte) ([]Item, erro
 				if !ok {
 					continue
 				}
-				errorProvider(s, providername, err)
+				logError(err)
 			}
 		}
 	}()
