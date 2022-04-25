@@ -74,10 +74,22 @@ func FileTree(dirname string) {
 	DefaultStore.FileTree(dirname)
 }
 
+// FileTreeRefresh is similar to the FileTree provider with the refresh feature enabled.
+// Updates can be handled with the `Watch()` function.
+func FileTreeRefresh(dirname string) {
+	DefaultStore.FileTreeRefresh(dirname)
+}
+
 // FileList registers a configstore provider which reads from the files contained in the directory given in parameter.
 // The content of the files should be JSON/YAML similar to the File provider.
 func FileList(dirname string) {
 	DefaultStore.FileList(dirname)
+}
+
+// FileListRefresh is similar to the FileList provider with the refresh feature enabled.
+// Updates can be handled with the `Watch()` function.
+func FileListRefresh(dirname string) {
+	DefaultStore.FileListRefresh(dirname)
 }
 
 // InMemory registers an InMemoryProvider with a given arbitrary name and returns it.

@@ -1,6 +1,7 @@
 package configstore
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -17,10 +18,21 @@ type Store struct {
 	watchers      []chan struct{}
 	watchersMut   sync.Mutex
 	watchersNotif bool
+
+	ctx  context.Context
+	done context.CancelFunc
 }
 
 func NewStore() *Store {
-	return &Store{providers: map[string]Provider{}, watchersNotif: true}
+	ctx, cancel := context.WithCancel(context.Background())
+
+	return &Store{providers: map[string]Provider{}, watchersNotif: true, ctx: ctx, done: cancel}
+}
+
+// Close cleans the store resources
+func (s *Store) Close() error {
+	s.done()
+	return nil
 }
 
 /*
@@ -136,10 +148,22 @@ func (s *Store) FileTree(dirname string) {
 	fileTreeProvider(s, dirname)
 }
 
+// FileTreeRefresh is similar to the FileTree provider with the refresh feature enabled.
+// Updates can be handled with the `Watch()` function.
+func (s *Store) FileTreeRefresh(dirname string) {
+	fileTreeRefreshProvider(s, dirname)
+}
+
 // FileList registers a configstore provider which reads from the files contained in the directory given in parameter.
 // The content of the files should be JSON/YAML similar to the File provider.
 func (s *Store) FileList(dirname string) {
 	fileListProvider(s, dirname)
+}
+
+// FileListRefresh is similar to the FileList provider with the refresh feature enabled.
+// Updates can be handled with the `Watch()` function.
+func (s *Store) FileListRefresh(dirname string) {
+	fileListRefreshProvider(s, dirname)
 }
 
 // InMemory registers an InMemoryProvider with a given arbitrary name and returns it.

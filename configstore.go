@@ -17,8 +17,11 @@ var (
 
 func init() {
 	RegisterProviderFactory("file", fileProvider)
+	RegisterProviderFactory("file+refresh", fileRefreshProvider)
 	RegisterProviderFactory("filelist", fileListProvider)
+	RegisterProviderFactory("filelist+refresh", fileListRefreshProvider)
 	RegisterProviderFactory("filetree", fileTreeProvider)
+	RegisterProviderFactory("filetree+refresh", fileTreeRefreshProvider)
 	RegisterProviderFactory("env", envProvider)
 }
 
