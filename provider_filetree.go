@@ -64,11 +64,6 @@ func fileTree(s *Store, dirname string, refresh bool) {
 					continue
 				}
 
-				// Create event will be trigger -- avoid two refreshes
-				if event.Op&fsnotify.Rename != 0 {
-					continue
-				}
-
 				// Add new path if it's a directory
 				if event.Op&fsnotify.Create != 0 {
 					if err := watchDirectory(watcher, event.Name); err != nil {
