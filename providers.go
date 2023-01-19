@@ -96,7 +96,17 @@ func file(s *Store, filename string, refresh bool, fn func([]byte) ([]Item, erro
 					continue
 				}
 
-				if event.Op&fsnotify.Write != 0 {
+				switch event.Op {
+				case fsnotify.Remove:
+					if err := watcher.Remove(filename); err != nil {
+						errorProvider(s, providername, err)
+					}
+				case fsnotify.Create:
+					if err := watcher.Add(filename); err != nil {
+						errorProvider(s, providername, err)
+					}
+					fallthrough
+				case fsnotify.Write:
 					vals, err := readFile(filename, fn)
 					if err != nil {
 						logError(err)
@@ -104,10 +114,9 @@ func file(s *Store, filename string, refresh bool, fn func([]byte) ([]Item, erro
 						inmem.mut.Lock()
 						inmem.items = vals
 						inmem.mut.Unlock()
-						s.NotifyWatchers()
 					}
 				}
-
+				s.NotifyWatchers()
 			case err, ok := <-watcher.Errors:
 				if !ok {
 					continue
