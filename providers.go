@@ -234,6 +234,10 @@ func envProvider(s *Store, prefix string) {
 			inmem.Add(NewItem(strings.TrimPrefix(eTr, prefix), ePair[1], 15))
 		}
 	}
+
+	// once all items have been added, we need to notify watchers in case the goroutine watching for
+	// providers change already scanned the Items
+	s.NotifyWatchers()
 }
 
 func buildProviderName(name string, refresh bool, parameter string) string {
