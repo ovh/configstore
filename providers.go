@@ -168,7 +168,7 @@ func fileList(s *Store, dirname string, refresh bool) {
 
 func readFile(filename string, fn func([]byte) ([]Item, error)) ([]Item, error) {
 	vals := []Item{}
-	b, err := ioutil.ReadFile(filename)
+	b, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
