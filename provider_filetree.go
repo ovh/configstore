@@ -199,7 +199,7 @@ func browseDir(items []Item, path, basename string) ([]Item, error) {
 }
 
 func readItem(path, basename string) (Item, error) {
-	content, err := ioutil.ReadFile(path)
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return Item{}, err
 	}
