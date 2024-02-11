@@ -2,6 +2,7 @@ package configstore
 
 import (
 	"fmt"
+	"log"
 	"sync"
 )
 
@@ -16,6 +17,7 @@ var (
 )
 
 func init() {
+	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Llongfile)
 	RegisterProviderFactory("file", fileProvider)
 	RegisterProviderFactory("file+refresh", fileRefreshProvider)
 	RegisterProviderFactory("filelist", fileListProvider)
