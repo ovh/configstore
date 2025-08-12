@@ -10,7 +10,7 @@ import (
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/ghodss/yaml"
+	"github.com/goccy/go-yaml"
 )
 
 // Logs functions can be overriden

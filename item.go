@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ghodss/yaml"
+	"github.com/goccy/go-yaml"
 )
 
 // Item is a key/value pair with a priority attached.
