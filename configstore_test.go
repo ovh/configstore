@@ -1,7 +1,6 @@
 package configstore
 
 import (
-	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -77,8 +76,9 @@ func TestStoreInstance(t *testing.T) {
 }
 
 func TestStore(t *testing.T) {
-	os.Setenv(ConfigEnvVar, "test:test123,env:CONFIGSTORE")
-	os.Setenv("CONFIGSTORE_ENV_VALUE", "from env")
+	t.Setenv(ConfigEnvVar, "test:test123,env:CONFIGSTORE")
+	t.Setenv("CONFIGSTORE_ENV_VALUE", "from env")
+	
 	AllowProviderOverride()
 	RegisterProviderFactory("test", func(s *Store, str string) {
 		if str == "test123" {

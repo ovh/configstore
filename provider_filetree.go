@@ -1,7 +1,6 @@
 package configstore
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"unicode"
@@ -47,7 +46,9 @@ func fileTree(s *Store, dirname string, refresh bool) {
 	}
 
 	go func() {
-		defer watcher.Close()
+		defer func(w *fsnotify.Watcher) {
+			_ = w.Close()
+		}(watcher)
 
 		for {
 			select {
@@ -102,7 +103,7 @@ func fileTree(s *Store, dirname string, refresh bool) {
 }
 
 func loadItems(dirname string) ([]Item, error) {
-	files, err := ioutil.ReadDir(dirname)
+	files, err := os.ReadDir(dirname)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +111,11 @@ func loadItems(dirname string) ([]Item, error) {
 	var items []Item
 	for _, f := range files {
 		filename := filepath.Join(dirname, f.Name())
-		subitems, err := walk(filename, f)
+		fi, err := f.Info()
+		if err != nil {
+			return nil, err
+		}
+		subitems, err := walk(filename, fi)
 		if err != nil {
 			return nil, err
 		}
@@ -168,14 +173,14 @@ func walk(filename string, f os.FileInfo) ([]Item, error) {
 }
 
 func browseDir(items []Item, path, basename string) ([]Item, error) {
-	files, err := ioutil.ReadDir(path)
+	files, err := os.ReadDir(path)
 	if err != nil {
 		return items, err
 	}
 
 	for _, f := range files {
 		filename := filepath.Join(path, f.Name())
-		if isDir(filename, f) {
+		if f.IsDir() {
 			var subItems []Item
 			subItems, err = browseDir(subItems, filename, filepath.Join(basename, f.Name()))
 			if err != nil {
