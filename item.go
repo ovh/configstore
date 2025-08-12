@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ghodss/yaml"
+	"github.com/goccy/go-yaml"
 )
 
 // Item is a key/value pair with a priority attached.
@@ -28,7 +28,7 @@ type jsonItem struct {
 
 func transformKey(k string) string {
 	k = strings.ToLower(k)
-	k = strings.Replace(k, "_", "-", -1)
+	k = strings.ReplaceAll(k, "_", "-")
 	return k
 }
 

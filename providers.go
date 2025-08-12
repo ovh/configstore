@@ -2,7 +2,6 @@ package configstore
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -10,7 +9,7 @@ import (
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/ghodss/yaml"
+	"github.com/goccy/go-yaml"
 )
 
 // Logs functions can be overriden
@@ -84,7 +83,9 @@ func file(s *Store, filename string, refresh bool, fn func([]byte) ([]Item, erro
 	}
 
 	go func() {
-		defer watcher.Close()
+		defer func(w *fsnotify.Watcher) {
+			_ = w.Close()
+		}(watcher)
 
 		for {
 			select {
@@ -137,7 +138,7 @@ func fileList(s *Store, dirname string, refresh bool) {
 
 	providername := buildProviderName("filelist", refresh, dirname)
 
-	files, err := ioutil.ReadDir(dirname)
+	files, err := os.ReadDir(dirname)
 	if err != nil {
 		errorProvider(s, providername, err)
 		return
@@ -147,7 +148,7 @@ func fileList(s *Store, dirname string, refresh bool) {
 		if file.IsDir() {
 			continue
 		}
-		if file.Mode()&os.ModeSymlink != 0 {
+		if file.Type()&os.ModeSymlink != 0 {
 			linkedFile, err := os.Stat(filepath.Join(dirname, file.Name()))
 			if err != nil {
 				errorProvider(s, providername, err)
