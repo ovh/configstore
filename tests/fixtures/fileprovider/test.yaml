@@ -1,0 +1,5 @@
+- key: my-config-key-1
+  value: my-value-1
+
+- key: my-config-key-2
+  value: my-value-2

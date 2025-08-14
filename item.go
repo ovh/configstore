@@ -2,6 +2,7 @@ package configstore
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -38,10 +39,13 @@ func NewItem(key, value string, priority int64) Item {
 	return Item{key: transformKey(key), value: value, priority: priority}
 }
 
-// UnmarshalJSON respects json.Unmarshaler
+// UnmarshalJSON respects json.Unmarshaler.
+//
+// Even in the inital payload is in YAML, goccy convert it to JSON before calling
+// this method so we have to use json.Unmarshal here.
 func (s *Item) UnmarshalJSON(b []byte) error {
 	j := &jsonItem{}
-	err := yaml.Unmarshal(b, &j)
+	err := json.Unmarshal(b, &j)
 	if err != nil {
 		return err
 	}

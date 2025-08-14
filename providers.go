@@ -177,7 +177,7 @@ func readFile(filename string, fn func([]byte) ([]Item, error)) ([]Item, error) 
 	if fn != nil {
 		return fn(b)
 	}
-	err = yaml.Unmarshal(b, &vals)
+	err = yaml.UnmarshalWithOptions(b, &vals, yaml.UseJSONUnmarshaler())
 	if err != nil {
 		return nil, err
 	}
