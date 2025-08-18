@@ -131,7 +131,7 @@ func (s *Item) storeUnmarshal(i interface{}) {
 	if s.unmarshalErr != nil {
 		return
 	}
-	err := yaml.Unmarshal([]byte(s.value), i)
+	err := yaml.UnmarshalWithOptions([]byte(s.value), i, yaml.UseJSONUnmarshaler())
 	if err != nil {
 		s.unmarshalErr = err
 		return

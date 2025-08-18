@@ -17,4 +17,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-retract v0.7.0 // unmarshaling bug
+retract (
+	v0.7.0 // unmarshaling bug
+	v0.7.1 // JSON unmarshaling bug
+)
