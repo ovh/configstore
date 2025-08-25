@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/goccy/go-yaml"
+	"github.com/ghodss/yaml"
 )
 
 // Logs functions can be overriden
@@ -177,7 +177,7 @@ func readFile(filename string, fn func([]byte) ([]Item, error)) ([]Item, error) 
 	if fn != nil {
 		return fn(b)
 	}
-	err = yaml.UnmarshalWithOptions(b, &vals, yaml.UseJSONUnmarshaler())
+	err = yaml.Unmarshal(b, &vals)
 	if err != nil {
 		return nil, err
 	}

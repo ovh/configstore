@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/goccy/go-yaml"
+	"github.com/ghodss/yaml"
 )
 
 // Item is a key/value pair with a priority attached.
@@ -131,7 +131,7 @@ func (s *Item) storeUnmarshal(i interface{}) {
 	if s.unmarshalErr != nil {
 		return
 	}
-	err := yaml.UnmarshalWithOptions([]byte(s.value), i, yaml.UseJSONUnmarshaler())
+	err := yaml.Unmarshal([]byte(s.value), i)
 	if err != nil {
 		s.unmarshalErr = err
 		return
