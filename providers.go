@@ -145,30 +145,26 @@ func fileList(s *Store, dirname string, refresh bool) {
 	}
 
 	for _, file := range files {
-		if file.IsDir() {
+		fi, err := file.Info()
+		if err != nil {
+			errorProvider(s, providername, err)
+			return
+		}
+		filename := filepath.Join(dirname, file.Name())
+
+		if isDirOrSymlinkDir(filename, fi) {
 			continue
 		}
-		if file.Type()&os.ModeSymlink != 0 {
-			linkedFile, err := os.Stat(filepath.Join(dirname, file.Name()))
-			if err != nil {
-				errorProvider(s, providername, err)
-				return
-			}
-			if linkedFile.IsDir() {
-				continue
-			}
-		}
-
 		if refresh {
-			fileRefreshProvider(s, filepath.Join(dirname, file.Name()))
+			fileRefreshProvider(s, filename)
 		} else {
-			fileProvider(s, filepath.Join(dirname, file.Name()))
+			fileProvider(s, filename)
 		}
 	}
 }
 
 func readFile(filename string, fn func([]byte) ([]Item, error)) ([]Item, error) {
-	vals := []Item{}
+	var vals []Item
 	b, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err

@@ -124,7 +124,7 @@ func loadItems(dirname string) ([]Item, error) {
 	return items, nil
 }
 
-func isDir(filename string, f os.FileInfo) bool {
+func isDirOrSymlinkDir(filename string, f os.FileInfo) bool {
 	var isDirSymlink bool
 	if f.Mode()&os.ModeSymlink != 0 {
 		link, err := filepath.EvalSymlinks(filename)
@@ -149,7 +149,7 @@ func watchDirectory(watcher *fsnotify.Watcher, root string) error {
 			return err
 		}
 
-		if isDir(path, f) {
+		if isDirOrSymlinkDir(path, f) {
 			if err := watcher.Add(path); err != nil {
 				return err
 			}
@@ -160,7 +160,7 @@ func watchDirectory(watcher *fsnotify.Watcher, root string) error {
 }
 
 func walk(filename string, f os.FileInfo) ([]Item, error) {
-	if isDir(filename, f) {
+	if isDirOrSymlinkDir(filename, f) {
 		return browseDir([]Item{}, filename, f.Name())
 	}
 
@@ -177,10 +177,13 @@ func browseDir(items []Item, path, basename string) ([]Item, error) {
 	if err != nil {
 		return items, err
 	}
-
 	for _, f := range files {
 		filename := filepath.Join(path, f.Name())
-		if f.IsDir() {
+		fi, err := f.Info()
+		if err != nil {
+			return nil, err
+		}
+		if isDirOrSymlinkDir(filename, fi) {
 			var subItems []Item
 			subItems, err = browseDir(subItems, filename, filepath.Join(basename, f.Name()))
 			if err != nil {
